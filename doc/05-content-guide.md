@@ -15,7 +15,10 @@
       않았다** — 푸터·개인정보처리방침의 사업자 표시 정보라 틀리면 문제가 된다
 - [ ] `content/site.ts` → `company.bizNo` (사업자등록번호)
 - [ ] `content/site.ts` → `company.address`
-- [ ] `content/site.ts` → `company.tel`, `company.fax`, `company.email`
+- [ ] `content/site.ts` → `company.tel`, `company.fax`
+- [x] ~~`company.email`~~ — `wituskr@gmail.com` 확정 (2026-09-13).
+      ⚠️ 도메인 메일(`contact@witus.kr`)로 옮기는 것을 권한다. 전달 설정만 하면
+      수신함은 그대로 쓸 수 있다 — `content/site.ts` 의 `email` 주석 참고.
 - [ ] `content/site.ts` → `company.privacyOfficer` (개인정보 보호책임자 성명·연락처)
 - [x] ~~`.env` → `NEXT_PUBLIC_SITE_URL` (실도메인)~~ — **불필요해졌다.**
       정규 도메인 `witus.kr` 이 `lib/site-url.ts` 의 기본값이고, Vercel 이 주입하는
