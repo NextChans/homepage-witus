@@ -51,7 +51,17 @@ export const company = {
   address: '서울특별시 강남구 테헤란로 000, 00층', // TODO
   tel: '02-0000-0000', // TODO
   fax: '02-0000-0001', // TODO
-  email: 'contact@example.co.kr', // TODO
+  /**
+   * 대표 이메일. 확정값(2026-09-13).
+   *
+   * ⚠️ **도메인 메일(`@witus.kr`)로 옮기는 것을 권한다.** `witus.kr` 은 이미 확보돼
+   *    있다. 전자금융업 등록·금융기관 제출 서류와 PG 영업대행 상대 B2B 에서
+   *    `@gmail.com` 대표메일은 신뢰도에 불리하다.
+   *    수신함을 바꾸지 않고도 가능하다 — `contact@witus.kr` 를 이 주소로 **전달**하고
+   *    Gmail 의 "다른 주소에서 메일 보내기" 로 발신만 도메인 주소로 맞춘다.
+   *    (가비아 메일 포워딩 또는 Cloudflare Email Routing, 둘 다 비용 없음)
+   */
+  email: 'wituskr@gmail.com',
   privacyOfficer: '김철수 / privacy@example.co.kr', // TODO: 개인정보 보호책임자
   hours: '평일 09:00 – 18:00 (점심 12:00 – 13:00)',
 } as const
