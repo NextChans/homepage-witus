@@ -7,8 +7,14 @@ type FeatureSplitProps = {
   title: ReactNode
   body: ReactNode
   points?: readonly string[]
-  /** 시각 패널에 들어갈 내용. 장식이 아니라 정보여야 한다. */
-  panel: ReactNode
+  /**
+   * 시각 패널에 들어갈 내용. **장식이 아니라 정보여야 한다.**
+   *
+   * 선택 항목이다 — 보여줄 **근거 있는 정보가 없으면 넣지 않는다.**
+   * 빈칸을 채우려고 플레이스홀더 수치(`XX%` 등)를 넣지 말 것. 없으면 단일 컬럼으로
+   * 렌더되고, 그 편이 근거 없는 숫자를 띄우는 것보다 낫다.
+   */
+  panel?: ReactNode
   /** true 면 패널이 왼쪽으로 간다. */
   reverse?: boolean
 }
@@ -23,8 +29,9 @@ export function FeatureSplit({
 }: FeatureSplitProps) {
   return (
     <Container className="py-20 sm:py-24">
-      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-        <Reveal className={reverse ? 'lg:order-2' : undefined}>
+      {/* 패널이 없으면 2단 그리드를 쓰지 않는다 — 빈 칸이 생긴다. */}
+      <div className={panel ? 'grid items-center gap-12 lg:grid-cols-2 lg:gap-20' : 'max-w-2xl'}>
+        <Reveal className={panel && reverse ? 'lg:order-2' : undefined}>
           <p className="type-eyebrow">{eyebrow}</p>
           <h2 className="type-title mt-4 max-w-md">{title}</h2>
           <p className="type-body mt-5 max-w-md">{body}</p>
@@ -42,20 +49,28 @@ export function FeatureSplit({
           ) : null}
         </Reveal>
 
-        <Reveal
-          delay={80}
-          className={`rounded-squircle-lg border border-hairline bg-surface p-10 shadow-lift sm:p-12 ${
-            reverse ? 'lg:order-1' : ''
-          }`}
-        >
-          {panel}
-        </Reveal>
+        {panel ? (
+          <Reveal
+            delay={80}
+            className={`rounded-squircle-lg border border-hairline bg-surface p-10 shadow-lift sm:p-12 ${
+              reverse ? 'lg:order-1' : ''
+            }`}
+          >
+            {panel}
+          </Reveal>
+        ) : null}
       </div>
     </Container>
   )
 }
 
-/** 패널용 정보 테이블. 수치는 크게, 라벨은 작게. */
+/**
+ * 패널용 정보 테이블. 수치는 크게, 라벨은 작게.
+ *
+ * ⚠️ **현재 사용처가 없다.** 사업 시작 전이라 게재할 근거 있는 수치가 없어
+ *    홈에서 내렸다(2026-09-13). 지우지 않고 남겨 둔다 — 실적이 쌓이면 그대로 쓴다.
+ *    쓸 때는 **근거 자료가 있는 항목만** 넣는다(표시광고법).
+ */
 export function PanelStats({
   rows,
 }: {

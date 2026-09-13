@@ -18,6 +18,7 @@ type Features = {
   inquiryForm: boolean
   privacyPolicy: boolean
   analytics: boolean
+  metrics: boolean
 }
 
 export const features: Features = {
@@ -75,4 +76,21 @@ export const features: Features = {
    *    안전한 선택이다 — 사용자 판단으로 켜 둔 상태다(2026-09-10).
    */
   analytics: true,
+
+  /**
+   * 홈·회사소개 상단의 신뢰 지표 밴드(`components/metrics-band.tsx`).
+   *
+   * 현재 `false` — **아직 사업 시작 전이라 보여줄 실적이 없다**(2026-09-13, 사용자).
+   * 켜 두면 `XXX+` `X,XXX대` 같은 플레이스홀더가 실제 도메인에 노출된다.
+   * **빈 값을 보여주는 것은 아무것도 안 보여주는 것보다 나쁘다** — 템플릿을 그대로
+   * 올린 사이트로 읽힌다.
+   *
+   * ⚠️ `true` 로 켜기 전에:
+   *   1. `content/site.ts` 의 `metrics` 를 **근거가 있는 항목만** 남긴다.
+   *      근거(설치 대장, 계약 건수 대장, 실적 집계) 없는 수치는 표시광고법
+   *      리스크다(허위·과장 광고). **숫자를 만들지 말고 그 항목을 지운다.**
+   *   2. 남은 개수에 맞춰 열 수가 따라오는지 확인한다 —
+   *      `metrics-band.tsx` 의 `GRID_COLS` 가 개수로 파생시킨다.
+   */
+  metrics: false,
 }

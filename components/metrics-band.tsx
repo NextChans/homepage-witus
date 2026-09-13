@@ -1,3 +1,4 @@
+import { features } from '@/content/features'
 import { metrics } from '@/content/site'
 import { Container } from './ui'
 import { Reveal } from './reveal'
@@ -24,6 +25,10 @@ const GRID_COLS: Record<number, string> = {
 }
 
 export function MetricsBand() {
+  // 사업 시작 전이라 내려둔 상태다. 사용처(홈·회사소개)에서 조건 분기하지 않고
+  // **여기서 한 번만** 막는다 — 페이지마다 검사하면 한 곳을 빠뜨린다.
+  if (!features.metrics) return null
+
   const cols = GRID_COLS[metrics.length] ?? 'grid-cols-2 lg:grid-cols-4'
 
   return (
