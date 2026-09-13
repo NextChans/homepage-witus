@@ -48,6 +48,11 @@ description: 이 홈페이지 템플릿의 콘텐츠(서비스 항목, 회사 �
   빈칸이 생긴다(6종에서 3열 마지막 행이 카드 1개 + 빈칸 2개).
   → `service-grid.tsx` 의 **`cardSpan()`** 이 남는 칸을 계산해 마지막 카드를 늘린다.
     span 클래스는 Tailwind 가 스캔해야 하므로 **정적 문자열 맵**으로 둔다(문자열 조립 금지).
+- **지표 밴드 열 수** — `content/site.ts` 의 `metrics` 개수를 바꾸면 `MetricsBand` 의
+  열 수도 따라가야 한다. 4개 → 3개일 때 `lg:grid-cols-4` 가 남아 있으면 **데스크톱에서
+  왼쪽으로 쏠리고 마지막 칸이 빈다.**
+  → `metrics-band.tsx` 의 **`GRID_COLS`** 정적 맵에서 개수로 파생시킨다. 여기도
+    문자열 조립 금지.
 
 `metadata.description`(`app/services/page.tsx`)과 `content/site.ts` 의 `description` 은
 서비스를 나열하므로 **직접 갱신해야 한다.**

@@ -104,7 +104,6 @@ export const metrics = [
   { value: 'XXX+', label: '누적 진행 프로젝트' },
   { value: 'X,XXX대', label: '단말기 설치·운영' },
   { value: 'XX일', label: '평균 등록 소요' },
-  { value: 'OO', label: '장애 대응 체계' },
 ] as const
 
 export const partnerLogos = [

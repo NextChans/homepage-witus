@@ -16,7 +16,7 @@ const journey = [
   },
   { step: '02', title: '설계', body: '규제 요건과 기술 요건을 하나의 일정표로 합칩니다.' },
   { step: '03', title: '실행', body: '서류 제출과 연동 일정, 검증을 나란히 관리합니다.' },
-  { step: '04', title: '운영', body: '오픈 후 정기 보고와 장애 대응 체계를 이관합니다.' },
+  { step: '04', title: '운영', body: '오픈 후 정기 보고 체계와 장애 접수 창구를 정리해 넘겨드립니다.' },
 ] as const
 
 export default function HomePage() {
@@ -99,7 +99,6 @@ export default function HomePage() {
               rows={[
                 { label: '일일 정산 대조', value: 'OO' },
                 { label: '거래 로그 보존', value: 'X년' },
-                { label: '장애 대응', value: 'OO' },
               ]}
             />
           }
