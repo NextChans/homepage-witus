@@ -28,7 +28,7 @@
  * 만드는 것보다 낫다.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
@@ -154,3 +154,46 @@ const ogSvg =
 
 await sharp(Buffer.from(ogSvg)).png().toFile(join(root, 'app/opengraph-image.png'))
 console.log('app/opengraph-image.png 1200×630 (심볼만 — 사명은 OG 제목 텍스트로 노출)')
+
+// ── 4. 배포용 로고 파일 (brand/) ────────────────────────────────────────────
+//
+// 명함·제안서·계약서·단말기 스티커 등 **저장소 밖으로 나가는** 용도.
+// `public/` 이 아니라 `brand/` 에 둔다 — 웹으로 서빙할 필요가 없고, 서빙하면
+// 아무나 내려받는다.
+//
+// ⚠️ **1도(단색) 버전이 핵심이다.** 계약서·팩스·실크스크린은 그라데이션을 못 쓴다.
+//    골드 그라데이션 버전만 있으면 그 자리에서 쓸 게 없어진다.
+
+mkdirSync(join(root, 'brand'), { recursive: true })
+
+/** 투명 배경 + 단색 심볼. `viewBox` 를 도형 영역에 맞춰 여백을 없앤다. */
+const plainSvg = (fill) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${INK_X} ${INK_Y} ${INK_W} ${INK_H}" width="${INK_W * 40}" height="${INK_H * 40}">` +
+  `<path d="${SHIELD_PATH}" fill="${fill}" fill-rule="evenodd" clip-rule="evenodd"/>` +
+  `</svg>`
+
+const variants = [
+  ['witus-symbol-ink', '#1d1d1f', '잉크 단색 — 흰 배경 기본'],
+  ['witus-symbol-black', '#000000', '순검정 1도 — 계약서·팩스·실크스크린'],
+  ['witus-symbol-white', '#ffffff', '흰색 1도 — 어두운 배경'],
+  ['witus-symbol-navy', navy, '네이비 단색'],
+  ['witus-symbol-gold', gold, '골드 단색 — 어두운 배경에만'],
+]
+
+for (const [name, fill, note] of variants) {
+  const svg = plainSvg(fill)
+  writeFileSync(join(root, `brand/${name}.svg`), `${svg}\n`)
+  await sharp(Buffer.from(svg)).resize({ height: 1024 }).png().toFile(join(root, `brand/${name}.png`))
+  console.log(`brand/${name}.svg + .png   ${note}`)
+}
+
+// 아이덴티티 버전(네이비 배경 + 골드 심볼) — 앱 아이콘과 같은 구성, 큰 사이즈
+const badgeSvg =
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">` +
+  `<defs>${gradient('bg')}</defs>` +
+  `<rect width="1024" height="1024" rx="224" fill="url(#bg)"/>` +
+  shield(place(1024, 1024, 640), gold) +
+  `</svg>`
+writeFileSync(join(root, 'brand/witus-badge-navy-gold.svg'), `${badgeSvg}\n`)
+await sharp(Buffer.from(badgeSvg)).png().toFile(join(root, 'brand/witus-badge-navy-gold.png'))
+console.log('brand/witus-badge-navy-gold.svg + .png   아이덴티티 배지 (네이비+골드)')
