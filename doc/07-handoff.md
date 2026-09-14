@@ -3,8 +3,8 @@
 ## 1. 새 세션에서 3분 안에 복귀하기
 
 ```bash
-git clone https://github.com/NextChans/homepage_-template.git
-cd homepage_-template
+git clone https://github.com/NextChans/homepage-witus.git
+cd homepage-witus
 git checkout claude/apple-style-homepage-iv3pxl
 npm install
 cp .env.example .env.local        # Supabase 값이 없어도 실행은 된다

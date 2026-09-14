@@ -69,7 +69,7 @@
 
      ```sh
      # 머지 커밋의 배포 환경 확인. env=Production 이 있으면 위험은 지나갔다.
-     curl -sS "https://api.github.com/repos/NextChans/homepage_-template/deployments?sha=<merge-sha>" \
+     curl -sS "https://api.github.com/repos/NextChans/homepage-witus/deployments?sha=<merge-sha>" \
        -H "Accept: application/vnd.github+json" | python3 -c \
        "import sys,json;[print(x['environment'],x['ref'][:7]) for x in json.load(sys.stdin)]"
      ```
