@@ -20,11 +20,10 @@
       ⚠️ 도메인 메일(`contact@witus.kr`)로 옮기는 것을 권한다. 전달 설정만 하면
       수신함은 그대로 쓸 수 있다 — `content/site.ts` 의 `email` 주석 참고.
 - [ ] `content/site.ts` → `company.privacyOfficer` (개인정보 보호책임자 성명·연락처)
-- [ ] `content/site.ts` → **가맹점모집인 등록번호** 필드 추가 + 푸터 표기
-      ⚠️ 이 등록은 **우리가 신청하는 게 아니다** — 여전법 §16의3① 에 따라 **VAN 사가**
-      소속 가맹점모집인으로 금융위(실무는 여신전문금융업협회)에 등록한다. 그리고
-      **사업자등록이 선행되어야 한다**(영 §6의10④). 순서: 사업자등록 → VAN 사에 요청
-      → 등록번호 수령 → 여기 반영. 근거는 `doc/13-witus-regulatory-status.md`.
+- [x] ~~`content/site.ts` → 가맹점모집인 등록번호~~ — **불필요.** 신용카드업자를 위한
+      가맹점계약 체결의 중개·대리를 하지 않으므로 가맹점모집인이 아니다(여전법 §2 5의3 은
+      두 요소를 모두 요구). 근거와 "다시 봐야 하는 신호" 는
+      `doc/13-witus-regulatory-status.md`.
 - [x] ~~`.env` → `NEXT_PUBLIC_SITE_URL` (실도메인)~~ — **불필요해졌다.**
       정규 도메인 `witus.kr` 이 `lib/site-url.ts` 의 기본값이고, Vercel 이 주입하는
       `VERCEL_PROJECT_PRODUCTION_URL` 이 도메인 연결을 자동 반영한다(ADR-025).
