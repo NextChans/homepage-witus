@@ -361,6 +361,9 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 
 ### 6-2. 메일 도착 알림 (Google Apps Script)
 
+> ✅ **설치 완료 (2026-09-14).** `wituskr@gmail.com` 계정에 5분 간격 트리거가 돈다.
+> 아래는 재설치·계정 이전 시를 위한 절차다.
+
 `wituskr@gmail.com` 으로 메일이 오면 같은 채널에 **"왔다" 만** 알린다.
 원본 스크립트는 `scripts/apps-script/inquiry-mail-notify.gs` 다 —
 **Apps Script 편집기 안에서만 고치지 말고 저장소를 고치고 붙여넣는다.**
@@ -407,12 +410,22 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 | Supabase 리전 | 서울 (`ap-northeast-2`) |
 | **마이그레이션** | **`0001`–`0007` 전부 적용 완료 (2026-09-14)** |
 | **파기 잡** | **`pg_cron` 2개 등록·활성** (03:10 / 03:30 KST) |
+| **접수 알림** | **Slack 연동 완료** — 앱 `WITUS 상담 접수`, 프로덕션 수신 확인 |
+| **메일 도착 알림** | **Apps Script 트리거 설치 완료** (5분 간격, 2026-09-14) |
 | CI | GitHub Actions `typecheck · lint · build` |
 
 > ⚠️ **`www.witus.kr` 과 `*.vercel.app` 이 아직 콘텐츠를 직접 내려준다.**
-> 같은 내용이 세 주소로 나간다. Domains 에서 두 행을 `Redirect to witus.kr` 로
-> 바꿔야 한다(3-4절 1). 확인 명령:
-> `curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' https://www.witus.kr/`
+> **2026-09-14 재측정에서도 세 주소 모두 `200`, 리다이렉트 없음**이다.
+> 같은 내용이 세 주소로 나가면 검색엔진이 중복 콘텐츠로 본다.
+> Vercel → Domains 에서 두 행을 **`Redirect to Another Domain` → `witus.kr`** 로
+> 바꿔야 한다(3-4절 1).
+>
+> ```sh
+> for u in https://witus.kr/ https://www.witus.kr/ https://homepage-template-ivory.vercel.app/; do
+>   curl -sS -o /dev/null -w "%{http_code} %{redirect_url}\n" "$u"
+> done
+> ```
+> → `witus.kr` 만 `200`, 나머지 둘은 `307`/`308` 이어야 정상이다.
 
 > ⚠️ `homepage-template.vercel.app`(팀 접미사 없는 짧은 주소)은 **다른 계정의 프로젝트**다.
 > 프로젝트 이름이 전역 선점되어 있다. 이 주소를 우리 사이트로 착각하지 말 것.
