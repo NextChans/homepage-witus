@@ -30,6 +30,7 @@ type Features = {
   analytics: boolean
   metrics: boolean
   partnerLogos: boolean
+  eligibilityCheck: boolean
 }
 
 export const features: Features = {
@@ -155,4 +156,35 @@ export const features: Features = {
    *   4. 로고 이미지로 교체할 경우 `logo-strip.tsx` 의 텍스트를 `<Image />` 로 바꾼다.
    */
   partnerLogos: false,
+
+  /**
+   * 전자금융업 등록 대상 자가진단 (`/check`).
+   *
+   * 현재 `false` — **법무 검토 전이다.**
+   *
+   * ## 이 도구의 값은 정확성 하나다
+   *
+   * WITUS 가 파는 것이 "규제를 안다" 인데, **규제를 틀리게 안내하면 값이 0이
+   * 아니라 음수가 된다.** 그래서 다른 플래그와 위험의 성격이 다르다 —
+   * `metrics` 는 꺼도 아쉬울 뿐이지만 이건 **틀린 채로 켜면 사업에 해가 된다.**
+   *
+   * ## ⚠️ `true` 로 켜기 전에 반드시
+   *
+   *   1. **법무 검토.** `content/eligibility.ts` 의 금액·조문·판정 기준을
+   *      법령 원문과 한 줄씩 대조한다. 현재 값은 공개 자료 종합이며
+   *      법제처 원문을 직접 확인하지 못했다(사이트가 SPA 라 추출 실패).
+   *   2. **2026. 12. 17. 시행 개정의 시행령**을 확인한다. 대통령령 위임 사항이
+   *      많다(PG 자본금 구체 금액 등). 아직 안 나왔으면 그 부분은 "확정 전" 으로
+   *      표기하거나 뺀다.
+   *   3. `LAW_BASIS.checkedAt` 을 검토한 날로 갱신한다.
+   *   4. 결과 화면의 **면책 고지를 떼지 않았는지** 확인한다.
+   *
+   * ## 개인정보를 받지 않는 설계를 유지한다
+   *
+   * 답변은 URL 쿼리스트링에만 있고 서버에 저장하지 않는다. 그래서
+   * `privacyPolicy` 가 꺼져 있어도 이 페이지는 켤 수 있다.
+   * **저장·이메일 수집을 붙이는 순간 그 전제가 깨진다** — 처리방침 공개가
+   * 선행되어야 하고 수집 항목·보관기간을 함께 고쳐야 한다.
+   */
+  eligibilityCheck: false,
 }
