@@ -72,7 +72,7 @@ Secret key 는 여러 개 만들 수 있다. **환경별로 따로 발급**해 �
 
 ### 3-1. 프로젝트 임포트
 
-1. vercel.com → Add New → Project → **Import Git Repository** → `NextChans/homepage_-template`
+1. vercel.com → Add New → Project → **Import Git Repository** → `NextChans/homepage-witus`
 2. Framework Preset 은 **Next.js** 로 자동 감지된다. Build/Output 설정은 손대지 않는다
    (그래서 이 저장소에 `vercel.json` 을 두지 않았다).
 3. Production Branch 를 `main` 으로 설정한다.
@@ -396,6 +396,23 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 
 **중복 알림**은 `slack-notified` 라벨로 막는다. 이 라벨을 Gmail 에서 지우면
 그 메일이 다시 알림 대상이 된다.
+
+---
+
+## ⚠️ 저장소 이름이 바뀌었다 (2026-09-14)
+
+`NextChans/homepage_-template` → **`NextChans/homepage-witus`**
+
+- GitHub 이 옛 이름을 리다이렉트하므로 `git push`·`fetch`·기존 PR 링크는 **계속 동작한다.**
+  다만 **누군가 옛 이름으로 새 저장소를 만들면 그 리다이렉트가 깨진다.**
+  문서·스크립트의 참조는 모두 새 이름으로 고쳤다.
+- 이미 클론해 둔 작업 사본이 있으면 remote 를 고친다:
+  ```sh
+  git remote set-url origin https://github.com/NextChans/homepage-witus
+  ```
+- ⚠️ **증상 주의** — 옛 이름으로 GitHub API 를 부르면 **`301`** 이 돌아온다.
+  `curl` 에 `-L` 이 없으면 본문이 비어 있어 **"CI 가 아직 안 끝났다" 로 오인하기 쉽다.**
+  실제로 그렇게 오인한 적이 있다. 응답이 비면 **HTTP 상태 코드부터 확인할 것.**
 
 ---
 

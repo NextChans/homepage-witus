@@ -55,7 +55,7 @@
 2. 피처 브랜치를 `main` 위로 재배치 — `git rebase --onto main --root`
 3. rebase 전/후 **트리 해시가 동일함을 검증**(`0d1acf6…`)한 뒤 `--force-with-lease` 로 푸시
    - 이 브랜치는 같은 세션에서 우리가 푸시한 커밋만 담고 있어 히스토리 재작성이 안전했다
-4. `main` ← 피처 브랜치 draft PR 생성 → [#1](https://github.com/NextChans/homepage_-template/pull/1)
+4. `main` ← 피처 브랜치 draft PR 생성 → [#1](https://github.com/NextChans/homepage-witus/pull/1)
    (57 파일, +10,268, `mergeable_state: clean`)
 
 `main` 이 빈 커밋이므로 PR diff 가 곧 작업 전체다.
@@ -1198,3 +1198,21 @@ Domains 화면에서 세 행이 똑같이 생겨서, 본체 행을 실수로 리
 자기 자신으로 보내게 되어 사이트가 열리지 않는다. 문서에 경고를 남겼다.
 
 이로써 `doc/09-deployment.md` 의 미해결 경고가 모두 정리됐다.
+
+### 저장소 이름 변경 반영 (2026-09-14)
+
+`NextChans/homepage_-template` → **`NextChans/homepage-witus`** (사용자가 변경).
+더 이상 템플릿이 아니라 WITUS 의 실제 사이트이므로 맞는 이름이다.
+
+- 로컬 remote 갱신, 문서·명령 5개 파일의 참조를 새 이름으로 교체
+- GitHub 이 옛 이름을 리다이렉트하므로 기존 링크·push 는 계속 동작한다.
+  다만 **누군가 옛 이름으로 새 저장소를 만들면 깨진다.**
+
+**여기서 겪은 오인** — 옛 이름으로 GitHub API 를 부르니 `301` 이 왔고,
+`-L` 이 없어 본문이 비었다. `check_runs` 가 0건으로 파싱되어 **"CI 가 아직
+실행 중" 으로 오인**했다. 실제로는 이미 통과해 있었다. 처음엔 레이트리밋으로
+짐작했는데 그것도 틀렸다.
+
+→ 교훈: **응답이 비면 파싱 결과를 믿기 전에 HTTP 상태 코드를 본다.**
+  `homepage-verify` 스킬 함정 15 에 기록했다. 더 확실한 방법은 인증된 GitHub MCP
+  도구(`pull_request_read` / `get_check_runs`)를 쓰는 것이다.

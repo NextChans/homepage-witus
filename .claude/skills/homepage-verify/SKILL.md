@@ -161,6 +161,25 @@ curl -s localhost:3100/ | grep -o 'viewBox="0 0 28 33"' | wc -l
 for p in $(ps -eo pid,args | grep '[n]ext-serv' | awk '{print $1}'); do kill -9 "$p"; done
 ```
 
+### 함정 15 — GitHub API 응답이 비면 **상태 코드를 먼저 본다**
+
+저장소 이름이 `homepage_-template` → `homepage-witus` 로 바뀌었다(2026-09-14).
+옛 이름으로 API 를 부르면 **`301`** 이 돌아오고, `curl` 에 `-L` 이 없으면 본문이
+비어 있다. 그 상태로 `check_runs` 를 파싱하면 **결과가 0건**이라
+**"CI 가 아직 안 끝났다" 로 오인한다** — 실제로 그렇게 오인해 다 끝난 CI 를
+계속 기다렸다.
+
+```bash
+# 나쁜 예: 실패해도 조용하다
+curl -sS ".../check-runs" | python3 -c "...파싱..."
+
+# 좋은 예: 상태 코드를 같이 찍는다
+curl -sSL ".../check-runs" -o /tmp/cr.json -w 'HTTP %{http_code}\n'
+```
+
+→ 더 확실한 방법은 **인증된 GitHub MCP 도구**를 쓰는 것이다
+  (`pull_request_read` 의 `get_check_runs`). 리다이렉트·레이트리밋을 타지 않는다.
+
 ### 함정 13 — 상담 폼 자동 제출은 **봇 가드에 걸린다**
 
 `/contact` 폼에는 `startedAt` 타이밍 가드가 있다 — 렌더부터 제출까지

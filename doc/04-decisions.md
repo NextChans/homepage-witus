@@ -879,7 +879,7 @@ storedHashShape: 'ok'` 였다. **아이디는 해결됐고 비밀번호만 남�
   확인은 GitHub Deployments API 로 한다(Vercel 토큰이 필요 없다):
 
   ```sh
-  curl -sS "https://api.github.com/repos/NextChans/homepage_-template/deployments?sha=<merge-sha>" \
+  curl -sS "https://api.github.com/repos/NextChans/homepage-witus/deployments?sha=<merge-sha>" \
     -H "Accept: application/vnd.github+json"
   ```
 
