@@ -153,6 +153,9 @@ export async function submitInquiry(
       id: String(inserted.id),
       serviceSlug: input.serviceSlug,
       company: input.company,
+      // 홈페이지 폼은 항상 'web'. DB 기본값과 같은 값을 여기서도 명시한다 —
+      // 관리자 직접 등록과 알림이 같은 채널에 섞이므로 경로 구분이 필요하다.
+      intakeChannel: 'web',
     })
   }
 

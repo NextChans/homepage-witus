@@ -1,5 +1,8 @@
 import 'server-only'
 
+import { services } from '@/content/services'
+import { CHANNEL_LABEL, isIntakeChannel } from '@/lib/admin/status'
+
 /**
  * 상담 문의 접수 Slack 알림.
  *
@@ -33,7 +36,21 @@ export type InquiryNotification = {
   serviceSlug: string
   /** 회사명. 개인정보가 아닌 법인 정보. 제외하려면 호출부에서 빼면 된다. */
   company?: string
+  /**
+   * 유입 경로(`web` / `phone` / `email` / `offline`).
+   *
+   * **필수다.** 홈페이지 폼 접수와 관리자 직접 등록이 **같은 채널에 섞여** 들어오므로,
+   * 이게 없으면 채널을 보는 사람이 "이미 누가 받은 건" 과 "아무도 안 본 건" 을
+   * 구분하지 못한다. 알림의 유용성이 여기서 갈린다.
+   */
+  intakeChannel: string
 }
+
+/** 서비스 slug → 표시명. 채널에 `van-terminal` 이 아니라 `밴 단말기` 가 보이게 한다. */
+const SERVICE_LABEL = new Map<string, string>([
+  ...services.map((s) => [s.slug, s.name] as [string, string]),
+  ['other', '기타 문의'],
+])
 
 /** 웹훅이 설정되어 있는가. 미설정이면 알림은 조용히 건너뛴다. */
 export function isSlackNotifyConfigured(): boolean {
@@ -41,16 +58,29 @@ export function isSlackNotifyConfigured(): boolean {
 }
 
 function buildBlocks(input: InquiryNotification) {
+  // 알 수 없는 값이 와도 죽지 않고 원문을 그대로 보여준다 — 알림은 접수를 막지 않는다.
+  const channel = isIntakeChannel(input.intakeChannel)
+    ? CHANNEL_LABEL[input.intakeChannel]
+    : input.intakeChannel
+  const service = SERVICE_LABEL.get(input.serviceSlug) ?? input.serviceSlug
+
   const lines = [
-    `*분야* ${input.serviceSlug}`,
+    `*경로* ${channel}`,
+    `*분야* ${service}`,
     input.company ? `*회사* ${input.company}` : null,
     `*접수 id* \`${input.id}\``,
   ].filter(Boolean)
 
+  // 제목으로 "누가 받아야 하는 건인지" 를 먼저 알린다.
+  // 홈페이지 접수는 아무도 아직 안 본 것이고, 직접 등록은 담당자가 이미 받은 것이다.
+  // ⚠️ 제목에 경로를 또 넣지 않는다 — 바로 아래 `*경로*` 줄과 중복된다.
+  const heading =
+    input.intakeChannel === 'web' ? ':inbox_tray: *새 상담 문의*' : ':memo: *문의 등록*'
+
   return [
     {
       type: 'section',
-      text: { type: 'mrkdwn', text: `:inbox_tray: *새 상담 문의*\n${lines.join('\n')}` },
+      text: { type: 'mrkdwn', text: `${heading}\n${lines.join('\n')}` },
     },
     {
       type: 'context',

@@ -20,14 +20,19 @@ import {
   manualInquirySchema,
 } from '@/lib/admin/manual-inquiry-schema'
 import { getAdminSession, startSession } from '@/lib/admin/session'
-import { type InquiryStatus, STATUS_LABEL, isInquiryStatus } from '@/lib/admin/status'
+import {
+  HANDLED_STATUSES,
+  type InquiryStatus,
+  STATUS_LABEL,
+  isInquiryStatus,
+} from '@/lib/admin/status'
 import {
   type UserFormState,
   changeOwnPasswordSchema,
   toFieldErrors,
 } from '@/lib/admin/user-schema'
 import { authenticateUser, changeOwnPassword } from '@/lib/admin/users'
-import { notifyTest } from '@/lib/notify/slack'
+import { notifyInquiry, notifyTest } from '@/lib/notify/slack'
 
 // ⚠️ 이 파일은 'use server' 다. **async 함수만 export 할 수 있다.**
 //    타입·상수를 내보내면 빌드가 깨진다(invalid-use-server-value).
@@ -262,6 +267,26 @@ export async function createManualInquiry(
     note: `channel=${parsed.data.intakeChannel}`,
     context: await auditContext(),
   })
+
+  // ── 접수 알림 (best-effort) ──────────────────────────────────────────
+  //
+  // 혼자 쓸 때는 등록한 본인이 아니까 필요 없었다. **접수 채널을 여러 사람이 보게
+  // 되면 이야기가 달라진다** — A 가 전화로 받아 등록한 건을 B 는 대시보드를
+  // 새로고침하지 않는 한 모른다.
+  //
+  // ⚠️ **이미 처리된 상태로 등록하면 보내지 않는다.** "연락 완료" 나 "스팸" 으로
+  //    기록만 남기는 경우까지 알리면 채널이 소음이 되고, 소음이 쌓이면 진짜 알림을
+  //    아무도 안 본다. 알림은 **아직 아무도 처리하지 않은 건** 에만 의미가 있다.
+  //
+  // 개인정보(이름·이메일·연락처·본문)는 알림에 넣지 않는다 — lib/notify/slack.ts 참고.
+  if (!HANDLED_STATUSES.includes(parsed.data.status)) {
+    await notifyInquiry({
+      id: result.id,
+      serviceSlug: parsed.data.serviceSlug,
+      company: parsed.data.company,
+      intakeChannel: parsed.data.intakeChannel,
+    })
+  }
 
   revalidatePath('/admin')
   redirect(`/admin/${result.id}`)
