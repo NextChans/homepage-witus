@@ -4,10 +4,24 @@ import { Container, Section } from '@/components/ui'
 import { features } from '@/content/features'
 import { company, site } from '@/content/site'
 
-export const metadata: Metadata = {
-  title: '개인정보처리방침',
-  description: '상담 문의 시 수집하는 개인정보의 항목, 목적, 보유기간과 이용자의 권리를 안내합니다.',
-  robots: { index: false, follow: true },
+/**
+ * ⚠️ **`export const metadata` 를 쓰지 않는다** — 플래그로 숨긴 페이지이기 때문이다.
+ *
+ * 정적 `metadata` 는 컴포넌트가 `notFound()` 를 부르기 **전에** 평가되고, 그 결과가
+ * **RSC 페이로드에 그대로 실려 나간다.** 화면상 404 는 맞지만 응답 본문을 열면
+ * 페이지 제목·설명이 보인다 — 실제로 프로덕션에서 확인했다(2026-09-14).
+ *
+ * 숨긴 페이지의 존재와 내용을 알려 줄 이유가 없으므로 `generateMetadata()` 로
+ * 바꿔 **플래그가 꺼져 있으면 빈 객체를 돌려준다.**
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  if (!features.privacyPolicy) return {}
+  return {
+    title: '개인정보처리방침',
+    description:
+      '상담 문의 시 수집하는 개인정보의 항목, 목적, 보유기간과 이용자의 권리를 안내합니다.',
+    robots: { index: false, follow: true },
+  }
 }
 
 const sections = [

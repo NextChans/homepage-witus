@@ -15,10 +15,23 @@ import {
 } from '@/content/eligibility'
 import { services } from '@/content/services'
 
-export const metadata: Metadata = {
-  title: '전자금융업 등록 대상 자가진단',
-  description:
-    '우리 서비스가 전자금융업 등록 대상인지 질문 몇 개로 확인합니다. 2026. 12. 17. 시행 개정 기준까지 함께 보여드립니다.',
+/**
+ * ⚠️ **`export const metadata` 를 쓰지 않는다** — 플래그로 숨긴 페이지이기 때문이다.
+ *
+ * 정적 `metadata` 는 컴포넌트가 `notFound()` 를 부르기 **전에** 평가되고, 그 결과가
+ * **RSC 페이로드에 그대로 실려 나간다.** 화면상 404 는 맞지만 응답 본문을 열면
+ * 페이지 제목·설명이 보인다 — 실제로 프로덕션에서 확인했다(2026-09-14).
+ *
+ * 숨긴 페이지의 존재와 내용을 알려 줄 이유가 없으므로 `generateMetadata()` 로
+ * 바꿔 **플래그가 꺼져 있으면 빈 객체를 돌려준다.**
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  if (!features.eligibilityCheck) return {}
+  return {
+    title: '전자금융업 등록 대상 자가진단',
+    description:
+      '우리 서비스가 전자금융업 등록 대상인지 질문 몇 개로 확인합니다. 2026. 12. 17. 시행 개정 기준까지 함께 보여드립니다.',
+  }
 }
 
 /**
