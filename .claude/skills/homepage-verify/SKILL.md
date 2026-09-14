@@ -190,18 +190,20 @@ curl -sSL ".../check-runs" -o /tmp/cr.json -w 'HTTP %{http_code}\n'
 → 제출 전에 **`await p.waitForTimeout(3000)` 이상**을 준다. 가드가 동작한 것이지
   버그가 아니다.
 
-### 함정 14 — Supabase 없이 등록 경로를 검증하려면 **PostgREST 스텁**
+### 함정 14 — Supabase·Slack 없이 검증하려면 **`scripts/verify/` 를 쓴다**
 
-문의 등록·알림 경로는 DB 쓰기를 타야 실행된다. 로컬에 Supabase 가 없을 때는
-`SUPABASE_URL` 을 30줄짜리 스텁 서버로 돌리면 **실제 코드 경로 그대로** 확인된다.
+문의 등록·알림 경로는 DB 쓰기를 타야 실행된다. 스텁을 매번 새로 쓰지 말 것 —
+**이미 저장소에 있다.**
 
-```js
-// POST /rest/v1/<table> → Accept 에 pgrst.object 가 있으면 단일 객체, 없으면 배열
-// GET  /rest/v1/<table> → [] (+ Content-Range: 0-0/0)  ← count 쿼리가 이 헤더를 읽는다
+```sh
+OUT=/tmp/slack.txt node scripts/verify/fake-slack.mjs   # 가짜 Slack  :4599
+node scripts/verify/fake-supabase.mjs                    # 가짜 DB     :4600
+npm run verify:mail                                      # 메일 알림 15개 검사
 ```
 
+쓰는 법은 `scripts/verify/README.md`. 핵심 함정 하나만 옮겨 두면 —
 `.single()` 은 `Accept: application/vnd.pgrst.object+json` 을 보내므로 **배열을
-돌려주면 조용히 실패한다.** 이것만 맞추면 나머지는 대충이어도 된다.
+돌려주면 조용히 실패한다.**
 
 ### 함정 11 — `.env.local` 의 `$` 는 **변수로 해석된다**
 
