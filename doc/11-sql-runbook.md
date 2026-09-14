@@ -19,6 +19,28 @@
 → **중요한 문장은 하나씩 실행하고 반환값을 눈으로 본다.**
    특히 `cron.schedule()` 은 성공 시 **jobid(숫자)** 를 돌려준다.
 
+**함수 본문 조각은 단독으로 실행되지 않는다.**
+
+`supabase/migrations/*.sql` 의 함수 안에 있는 `v_cutoff`·`v_retained` 같은 `v_` 변수는
+`declare` 로 선언된 **PL/pgSQL 지역 변수**다. 함수 밖에서는 존재하지 않는다.
+
+| 위치 | `select … into x` |
+|---|---|
+| 일반 SQL | **테이블 `x` 를 생성** (`CREATE TABLE AS` 와 같다) |
+| PL/pgSQL 블록 안 | **변수 `x` 에 대입** |
+
+그래서 본문을 그대로 붙여넣으면 —
+
+- `v_cutoff` → `ERROR: 42703 column "v_cutoff" does not exist`
+- `select … into v_retained` → Supabase 린터가 **"RLS 없는 테이블 생성"** 으로 경고
+
+  ⚠️ 이때 **`Run and enable RLS` 를 누르지 않는다.** 없는 테이블에 RLS 를 걸려다
+     실패하는데, 위의 "마지막 문장 결과만 보인다" 함정과 겹쳐 어디까지 걸렸는지
+     알 수 없게 된다.
+
+→ 변수를 **실제 값으로 바꿔** 쓴다. 예: `v_cutoff` → `now() - interval '3 years'`.
+  (2026-09-14 실제로 겪었다. ADR-047)
+
 ---
 
 ## 1. 마이그레이션 — 적용 전 점검
