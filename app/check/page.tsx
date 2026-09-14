@@ -134,6 +134,16 @@ export default async function CheckPage({ searchParams }: PageProps) {
                 판단을 대신하지 않습니다. 실제 해당 여부는 사업 구조 전체를 보아야 확정됩니다.
                 조문·금액은 아래 원문과 대조했습니다.
               </p>
+              {/* ⚠️ 이 줄을 빼지 말 것. "해당하지 않는 것으로 보입니다" 가 "등록·신고할
+                  것이 없다" 로 읽히면 방문자가 **다른 법률의 의무를 놓친다.** 실제로
+                  밴대리점·결제대행 영업대행은 이 도구에서 전부 "해당 없음" 이 나오는데,
+                  「여신전문금융업법」 의 가맹모집인 등록이 따로 있을 수 있다(2026-09-14
+                  확인 중). 범위를 안 적으면 도구가 오히려 안심시키는 쪽으로 작동한다. */}
+              <p className="mt-2 text-[13px] leading-relaxed text-ink">
+                이 진단은 <b className="font-medium">「전자금융거래법」 기준</b>입니다.
+                「여신전문금융업법」 등 다른 법률의 등록·신고 의무는 다루지 않으므로,
+                여기서 “해당하지 않는다” 고 나와도 별도 확인이 필요합니다.
+              </p>
               <ul className="mt-3 space-y-1">
                 {LAW_BASIS.sources.map((src) => (
                   <li key={src} className="text-[12px] leading-relaxed text-ink-muted">
