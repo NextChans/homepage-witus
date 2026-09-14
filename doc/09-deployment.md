@@ -412,20 +412,31 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 | **파기 잡** | **`pg_cron` 2개 등록·활성** (03:10 / 03:30 KST) |
 | **접수 알림** | **Slack 연동 완료** — 앱 `WITUS 상담 접수`, 프로덕션 수신 확인 |
 | **메일 도착 알림** | **Apps Script 트리거 설치 완료** (5분 간격, 2026-09-14) |
+| **도메인 통일** | **완료** — `www` · `*.vercel.app` → `witus.kr` (308 영구) |
 | CI | GitHub Actions `typecheck · lint · build` |
 
-> ⚠️ **`www.witus.kr` 과 `*.vercel.app` 이 아직 콘텐츠를 직접 내려준다.**
-> **2026-09-14 재측정에서도 세 주소 모두 `200`, 리다이렉트 없음**이다.
-> 같은 내용이 세 주소로 나가면 검색엔진이 중복 콘텐츠로 본다.
-> Vercel → Domains 에서 두 행을 **`Redirect to Another Domain` → `witus.kr`** 로
-> 바꿔야 한다(3-4절 1).
+> ✅ **도메인 통일 완료 (2026-09-14).** 세 주소가 모두 `witus.kr` 로 모인다.
 >
+> ```
+> witus.kr                             200        ← 본체
+> www.witus.kr                         308 → https://witus.kr/
+> homepage-template-ivory.vercel.app   308 → https://witus.kr/
+> ```
+>
+> 경로도 보존된다(`www.witus.kr/services` → `witus.kr/services`).
+> **308(영구)** 이라 검색엔진이 색인을 `witus.kr` 하나로 합친다.
+>
+> 재확인 명령:
 > ```sh
 > for u in https://witus.kr/ https://www.witus.kr/ https://homepage-template-ivory.vercel.app/; do
 >   curl -sS -o /dev/null -w "%{http_code} %{redirect_url}\n" "$u"
 > done
 > ```
-> → `witus.kr` 만 `200`, 나머지 둘은 `307`/`308` 이어야 정상이다.
+> → 첫 줄만 `200`, 나머지 둘은 `308` + `https://witus.kr/` 이어야 정상이다.
+>
+> ⚠️ **`witus.kr` 행은 `Connect to an environment → Production` 이어야 한다.**
+>    세 행이 화면상 똑같이 생겨서 헷갈리기 쉬운데, 본체 행을 리다이렉트로 바꾸면
+>    **자기 자신으로 보내게 되어 사이트가 열리지 않는다.**
 
 > ⚠️ `homepage-template.vercel.app`(팀 접미사 없는 짧은 주소)은 **다른 계정의 프로젝트**다.
 > 프로젝트 이름이 전역 선점되어 있다. 이 주소를 우리 사이트로 착각하지 말 것.
