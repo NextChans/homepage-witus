@@ -1177,3 +1177,24 @@ hairline 을 두 줄로 만들었다. 스크린샷으로는 놓칠 수준이라 
 **검증** 끈 상태·켠 상태를 각각 빌드해 측정 — 수정 전 빈 래퍼 1개, 수정 후 0개,
 켜면 섹션이 문구·항목 6종 그대로 복구되고 빈 래퍼 0개. 프로덕션 빌드 렌더에서
 `주식회사`·`주요 VAN`·`VAN A`~`CSP F`·`연동합니다` 전부 0회.
+
+### 도메인 리다이렉트 완료 (2026-09-14)
+
+`www.witus.kr` 과 `homepage-template-ivory.vercel.app` 을 **308 영구 리다이렉트**로
+`witus.kr` 에 모았다. 측정 확인:
+
+```
+witus.kr                             200        ← 본체 정상
+www.witus.kr                         308 → https://witus.kr/
+homepage-template-ivory.vercel.app   308 → https://witus.kr/
+www.witus.kr/services                308 → https://witus.kr/services   ← 경로 보존
+```
+
+**경로 보존을 따로 확인한 이유** — Vercel 기본 동작이긴 하지만, 안 되면 공유된
+딥링크가 전부 홈으로 떨어진다. "리다이렉트가 걸렸다" 와 "제대로 걸렸다" 는 다르다.
+
+⚠️ **`witus.kr` 행은 `Connect to an environment → Production` 이어야 한다.**
+Domains 화면에서 세 행이 똑같이 생겨서, 본체 행을 실수로 리다이렉트로 바꾸면
+자기 자신으로 보내게 되어 사이트가 열리지 않는다. 문서에 경고를 남겼다.
+
+이로써 `doc/09-deployment.md` 의 미해결 경고가 모두 정리됐다.
