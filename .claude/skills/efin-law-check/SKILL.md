@@ -128,6 +128,14 @@ Object.keys(EMPTY_ANSWERS).sort().join() === questions.map(q => q.key).sort().jo
 grep -n "'" content/eligibility.ts | grep '\*\*'
 ```
 
+## 4-1. 이 스킬이 다루지 않는 것
+
+이 절차는 **방문자용 자가진단**(`content/eligibility.ts`)을 전자금융거래법과 맞추는 것이다.
+**WITUS 자신의 규제 지위**는 다른 문제이고 `doc/13-witus-regulatory-status.md` 에 있다 —
+전자금융거래법상 해당 없음, 여신전문금융업법의 **가맹점모집인**이다.
+
+같은 "법령 대조" 라고 섞지 않는다. 대상(방문자 / 우리)도 법(전금법 / 여전법)도 다르다.
+
 ## 5. 마무리
 
 - `LAW_BASIS.checkedAt` / `current` / `upcoming` / `sources` 를 갱신한다.
