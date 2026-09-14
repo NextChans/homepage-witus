@@ -91,9 +91,9 @@ export default function HomePage() {
         </Container>
       </Section>
 
-      <div className="border-t border-hairline bg-surface">
-        <LogoStrip />
-      </div>
+      {/* 배경·상단선은 LogoStrip 이 직접 갖는다 — 여기서 감싸면 플래그를 껐을 때
+          빈 띠가 남는다(실제로 그랬다). 숨길 수 있는 섹션은 여기에 래퍼를 두지 말 것. */}
+      <LogoStrip />
 
       <CtaBand />
     </>
