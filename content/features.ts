@@ -29,6 +29,7 @@ type Features = {
   privacyPolicy: boolean
   analytics: boolean
   metrics: boolean
+  partnerLogos: boolean
 }
 
 export const features: Features = {
@@ -135,4 +136,23 @@ export const features: Features = {
    *      `metrics-band.tsx` 의 `GRID_COLS` 가 개수로 파생시킨다.
    */
   metrics: false,
+
+  /**
+   * 홈 하단의 제휴사 표기 띠(`components/logo-strip.tsx`).
+   *
+   * 현재 `false` — **제휴가 아직 확정 전이다**(2026-09-14, 사용자).
+   * 켜 두면 `VAN A` `PG C` 같은 플레이스홀더가 실제 도메인에 노출된다.
+   * `metrics` 와 같은 이유다 — **빈 값을 보여주는 것은 아무것도 안 보여주는
+   * 것보다 나쁘다.** 템플릿을 그대로 올린 사이트로 읽힌다.
+   *
+   * ⚠️ `true` 로 켜기 전에:
+   *   1. `content/site.ts` 의 `partnerLogos` 를 **실제 제휴사**로 바꾼다.
+   *   2. **각 사의 서면 사용 동의를 먼저 받는다.** 상호·로고를 동의 없이 게재하면
+   *      상표권·부정경쟁 문제가 된다.
+   *   3. 문구 "주요 VAN · PG · 금융기관과 **연동합니다**" 는 **제휴 관계를 주장하는
+   *      문장**이다. 실제 연동 실적이 있는 곳만 올린다 — 없는 곳을 올리면
+   *      표시광고법 리스크(허위·과장 광고)다.
+   *   4. 로고 이미지로 교체할 경우 `logo-strip.tsx` 의 텍스트를 `<Image />` 로 바꾼다.
+   */
+  partnerLogos: false,
 }
