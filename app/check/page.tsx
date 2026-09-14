@@ -103,7 +103,7 @@ export default async function CheckPage({ searchParams }: PageProps) {
   const sp = await searchParams
   const { answers, answered } = readAnswers(sp)
   const verdicts = evaluate(answers)
-  const nowDuties = currentDuties(verdicts)
+  const nowDuties = currentDuties(answers, verdicts)
   const duties = upcomingDuties(answers, verdicts)
   const serviceName = new Map<string, string>(services.map((s) => [s.slug, s.name]))
 
