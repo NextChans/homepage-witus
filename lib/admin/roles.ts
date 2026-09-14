@@ -42,6 +42,14 @@ export const PERMISSIONS = [
   'user.manage',
   /** 감사 로그 조회 */
   'audit.read',
+  /**
+   * 접수 알림 채널(Slack) 점검 메시지 발송.
+   *
+   * **관리자 전용이다.** 외부(제3자 워크스페이스)로 나가는 전송이라 상담자가
+   * 임의로 누를 일이 아니고, 눌러야 할 상황(환경변수를 바꿨다·웹훅을 재발급했다)
+   * 자체가 운영자의 일이다.
+   */
+  'notify.test',
 ] as const
 export type Permission = (typeof PERMISSIONS)[number]
 
@@ -57,7 +65,7 @@ export type Permission = (typeof PERMISSIONS)[number]
  * `inquiry_status_history` 에 남아 사후 추적이 가능하다.
  */
 const ROLE_PERMISSIONS: Record<AdminRole, readonly Permission[]> = {
-  admin: ['inquiry.read', 'inquiry.create', 'inquiry.status', 'user.manage', 'audit.read'],
+  admin: ['inquiry.read', 'inquiry.create', 'inquiry.status', 'user.manage', 'audit.read', 'notify.test'],
   agent: ['inquiry.read', 'inquiry.create', 'inquiry.status'],
 }
 

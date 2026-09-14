@@ -3,9 +3,15 @@ import 'server-only'
 /**
  * 상담 문의 접수 Slack 알림.
  *
- * 현재는 **배선만 되어 있고 동작하지 않는다.** `features.inquiryForm` 이 꺼져 있어
- * 호출 지점이 실행되지 않고, `SLACK_INQUIRY_WEBHOOK_URL` 도 설정되어 있지 않다.
- * 문의 폼을 켜는 시점에 웹훅 URL 만 넣으면 그대로 동작한다.
+ * `SLACK_INQUIRY_WEBHOOK_URL` 은 **Vercel Production 에 설정되어 있다**(2026-09-14).
+ * 다만 `features.inquiryForm` 이 꺼져 있어 **호출 지점이 실행되지 않는다** — 즉
+ * 배선이 살아 있는지 확인할 방법이 평상시에는 없다.
+ *
+ * ⚠️ **이 모듈은 실패해도 throw 하지 않는다**(아래 `notifyInquiry` 참고).
+ *    접수를 살리려는 의도적 설계지만, 부작용으로 **웹훅 URL 이 틀려도 화면상
+ *    증상이 전혀 없다.** 조용히 안 오는 것이 가장 나쁜 실패 형태다.
+ *    → 그래서 `notifyTest()` 를 둔다. 관리자 화면(`/admin`)에서 수동으로 눌러
+ *      **실제 전송 경로 전체**(환경변수 → 코드 → Slack)를 확인한다.
  *
  * ⚠️ 개인정보를 Slack 으로 보내지 않는다 —
  *    Slack 은 제3자 서비스이고 메시지는 워크스페이스에 장기 보존되며 검색된다.
@@ -88,5 +94,67 @@ export async function notifyInquiry(input: InquiryNotification): Promise<boolean
       name: error instanceof Error ? error.name : 'unknown',
     })
     return false
+  }
+}
+
+/**
+ * 알림 채널 점검 결과.
+ *
+ * `notifyInquiry` 와 달리 **실패 이유를 돌려준다.** 점검의 목적이 바로 그것이기
+ * 때문이다 — "안 왔다" 만으로는 환경변수 미설정인지, URL 이 폐기됐는지,
+ * 네트워크가 막힌 것인지 구분할 수 없다.
+ *
+ * ⚠️ `detail` 에 **웹훅 URL 을 절대 넣지 않는다.** 이 값은 관리자 화면에 그대로
+ *    표시된다. Slack 웹훅 URL 은 그 자체가 비밀이다(아는 사람은 누구나 채널에
+ *    글을 쓸 수 있다).
+ */
+export type NotifyTestResult =
+  | { ok: true }
+  | { ok: false; reason: 'unconfigured' }
+  | { ok: false; reason: 'http'; status: number }
+  | { ok: false; reason: 'exception'; name: string }
+
+/**
+ * 알림 채널 점검용 테스트 메시지를 보낸다.
+ *
+ * **개인정보를 담지 않는다** — 고정 문구와 누른 사람의 관리자 계정명뿐이다.
+ * 계정명은 개인정보가 아니라 운영 식별자이고, "누가 점검했는지" 가 Slack 메시지
+ * 자체에 남아 **별도 감사 로그 없이도 기록이 된다**(그래서 `AdminAction` 을
+ * 늘리지 않았다 — 늘리면 DB CHECK 제약 마이그레이션이 따라온다).
+ *
+ * ⚠️ 메시지 첫 줄에 **테스트임을 명시**한다. 실제 접수 알림과 섞이면 점검이
+ *    오히려 혼란을 만든다.
+ */
+export async function notifyTest(actor: string): Promise<NotifyTestResult> {
+  const webhook = process.env.SLACK_INQUIRY_WEBHOOK_URL
+  if (!webhook) return { ok: false, reason: 'unconfigured' }
+
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text:
+          ':wrench: *알림 채널 점검 (테스트)*\n' +
+          '실제 상담 문의가 아닙니다. 이 메시지가 보이면 웹훅 배선이 정상입니다.',
+      },
+    },
+    {
+      type: 'context',
+      elements: [{ type: 'mrkdwn', text: `실행: ${actor} · ${new Date().toISOString()}` }],
+    },
+  ]
+
+  try {
+    const res = await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ blocks }),
+      signal: AbortSignal.timeout(5_000),
+    })
+    if (!res.ok) return { ok: false, reason: 'http', status: res.status }
+    return { ok: true }
+  } catch (error) {
+    return { ok: false, reason: 'exception', name: error instanceof Error ? error.name : 'unknown' }
   }
 }
