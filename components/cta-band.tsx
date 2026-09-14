@@ -1,6 +1,6 @@
 import { Reveal } from './reveal'
 import { ButtonAnchor, ButtonLink, Container } from './ui'
-import { company } from '@/content/site'
+import { company, mailHref, telHref } from '@/content/site'
 
 export function CtaBand({
   title = '어디서부터 시작할지 모르겠다면.',
@@ -19,11 +19,15 @@ export function CtaBand({
           <Reveal as="p" className="type-lede mt-6" delay={60}>
             {body}
           </Reveal>
+          {/* 보조 버튼은 **실제로 연결되는 창구**만 노출한다. 전화가 미개통이면
+              이메일로 대체한다 — 없는 번호를 누르게 두지 않는다. */}
           <Reveal className="mt-10 flex flex-wrap justify-center gap-3" delay={120}>
             <ButtonLink href="/contact">상담 신청</ButtonLink>
-            <ButtonAnchor href={`tel:${company.tel.replace(/-/g, '')}`}>
-              {company.tel}
-            </ButtonAnchor>
+            {company.tel && telHref ? (
+              <ButtonAnchor href={telHref}>{company.tel}</ButtonAnchor>
+            ) : (
+              <ButtonAnchor href={mailHref}>{company.email}</ButtonAnchor>
+            )}
           </Reveal>
         </div>
       </Container>

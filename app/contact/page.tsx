@@ -5,14 +5,14 @@ import { Reveal } from '@/components/reveal'
 import { ButtonAnchor, Container, Section } from '@/components/ui'
 import { features } from '@/content/features'
 import { services } from '@/content/services'
-import { company } from '@/content/site'
+import { company, mailHref, telHref } from '@/content/site'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: '문의',
   description: features.inquiryForm
     ? '결제 인프라 구축과 전자금융 규제 대응 상담을 접수합니다. 1영업일 내 회신드립니다.'
-    : '결제 인프라 구축과 전자금융 규제 대응 상담. 전화 또는 이메일로 문의해 주세요.',
+    : `결제 인프라 구축과 전자금융 규제 대응 상담. ${telHref ? '전화 또는 이메일로' : '이메일로'} 문의해 주세요.`,
 }
 
 const options = [
@@ -22,22 +22,30 @@ const options = [
 
 type PageProps = { searchParams: Promise<{ service?: string }> }
 
-/** 연락 수단 목록. 폼이 있든 없든 항상 보여준다. */
+/**
+ * 연락 수단 목록. 폼이 있든 없든 항상 보여준다.
+ *
+ * ⚠️ **미확정 항목(`null`)은 행째로 뺀다.** 전화·주소가 확정되기 전까지 이 페이지의
+ *    실질 창구는 이메일 하나다. 빈 줄이나 플레이스홀더를 남기면 "연락처가 있는데
+ *    안 되는 것" 처럼 보인다.
+ */
 function ContactDetails() {
   return (
     <dl className="space-y-6 text-[15px]">
-      <div>
-        <dt className="text-[13px] text-ink-muted">전화</dt>
-        <dd className="mt-1">
-          <a href={`tel:${company.tel.replace(/-/g, '')}`} className="text-ink hover:text-accent">
-            {company.tel}
-          </a>
-        </dd>
-      </div>
+      {company.tel && telHref ? (
+        <div>
+          <dt className="text-[13px] text-ink-muted">전화</dt>
+          <dd className="mt-1">
+            <a href={telHref} className="text-ink hover:text-accent">
+              {company.tel}
+            </a>
+          </dd>
+        </div>
+      ) : null}
       <div>
         <dt className="text-[13px] text-ink-muted">이메일</dt>
         <dd className="mt-1">
-          <a href={`mailto:${company.email}`} className="text-ink hover:text-accent">
+          <a href={mailHref} className="text-ink hover:text-accent">
             {company.email}
           </a>
         </dd>
@@ -46,10 +54,12 @@ function ContactDetails() {
         <dt className="text-[13px] text-ink-muted">운영시간</dt>
         <dd className="mt-1 text-ink">{company.hours}</dd>
       </div>
-      <div>
-        <dt className="text-[13px] text-ink-muted">주소</dt>
-        <dd className="mt-1 text-ink">{company.address}</dd>
-      </div>
+      {company.address ? (
+        <div>
+          <dt className="text-[13px] text-ink-muted">주소</dt>
+          <dd className="mt-1 text-ink">{company.address}</dd>
+        </div>
+      ) : null}
     </dl>
   )
 }
@@ -63,11 +73,18 @@ export default async function ContactPage({ searchParams }: PageProps) {
   if (!features.inquiryForm) {
     return (
       <>
+        {/* ⚠️ 히어로 문안은 **실제 연락 수단에 따라 갈린다.** 전화가 미개통인데
+            "전화 한 통이면 됩니다" 라고 쓰면 페이지 첫 줄부터 지킬 수 없는 약속이
+            된다. `company.tel` 에 값이 들어오면 전화 우선 문안으로 돌아온다. */}
         <Hero
           size="headline"
           eyebrow="문의"
-          title="전화 한 통이면 됩니다."
-          lede="현재 온라인 상담 접수는 준비 중입니다. 전화 또는 이메일로 연락 주시면 담당자가 직접 안내드립니다."
+          title={telHref ? '전화 한 통이면 됩니다.' : '메일 한 통이면 됩니다.'}
+          lede={
+            telHref
+              ? '현재 온라인 상담 접수는 준비 중입니다. 전화 또는 이메일로 연락 주시면 담당자가 직접 안내드립니다.'
+              : '현재 온라인 상담 접수는 준비 중입니다. 아래 주소로 메일 주시면 담당자가 직접 회신드립니다.'
+          }
         />
 
         <Section className="border-t border-hairline pt-16 sm:pt-20 lg:pt-24">
@@ -79,10 +96,18 @@ export default async function ContactPage({ searchParams }: PageProps) {
                   <ContactDetails />
                 </div>
                 <div className="mt-10 flex flex-wrap gap-3">
-                  <ButtonAnchor href={`tel:${company.tel.replace(/-/g, '')}`} variant="primary">
-                    전화 걸기
-                  </ButtonAnchor>
-                  <ButtonAnchor href={`mailto:${company.email}`}>이메일 보내기</ButtonAnchor>
+                  {telHref ? (
+                    <>
+                      <ButtonAnchor href={telHref} variant="primary">
+                        전화 걸기
+                      </ButtonAnchor>
+                      <ButtonAnchor href={mailHref}>이메일 보내기</ButtonAnchor>
+                    </>
+                  ) : (
+                    <ButtonAnchor href={mailHref} variant="primary">
+                      이메일 보내기
+                    </ButtonAnchor>
+                  )}
                 </div>
               </Reveal>
 

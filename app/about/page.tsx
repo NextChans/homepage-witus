@@ -8,7 +8,7 @@ import { company, site } from '@/content/site'
 
 export const metadata: Metadata = {
   title: '회사소개',
-  description: `${site.legalName} 는 결제 인프라 도입과 전자금융 규제 대응을 함께 진행하는 팀입니다.`,
+  description: `${site.name}는 결제 인프라 도입과 전자금융 규제 대응을 함께 진행하는 팀입니다.`,
 }
 
 /** ⚠️ 임시 문안. 실제 연혁·조직 정보로 교체할 것. */
@@ -51,7 +51,7 @@ export default function AboutPage() {
             결제 전문가팀.
           </>
         }
-        lede={`${site.legalName} 는 결제 인프라 도입과 전자금융 규제 대응을 한 창구에서 진행합니다. 법무·개발사·심사 기관 사이에서 일정이 끊기지 않게 만드는 것이 우리의 일입니다.`}
+        lede={`${site.name}는 결제 인프라 도입과 전자금융 규제 대응을 한 창구에서 진행합니다. 법무·개발사·심사 기관 사이에서 일정이 끊기지 않게 만드는 것이 우리의 일입니다.`}
       />
 
       <MetricsBand />
@@ -117,19 +117,29 @@ export default function AboutPage() {
             </Reveal>
             <Reveal delay={60}>
               <dl className="divide-y divide-hairline border-y border-hairline text-[15px]">
-                {[
-                  ['상호', site.legalName],
-                  ['대표', company.ceo],
-                  ['사업자등록번호', company.bizNo],
-                  ['주소', company.address],
-                  ['전화', company.tel],
-                  ['이메일', company.email],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex gap-8 py-5">
-                    <dt className="w-32 shrink-0 text-ink-muted">{label}</dt>
-                    <dd className="text-ink">{value}</dd>
-                  </div>
-                ))}
+                {/* ⚠️ **미확정 항목은 행째로 뺀다.** 사업자 정보 표에 `000-00-00000`
+                    같은 값이 남아 있으면 "템플릿 그대로 올린 사이트" 로 읽히는
+                    수준을 넘어, 사업자 표시 정보의 허위 기재가 된다.
+                    `content/site.ts` 에서 `null` 이 풀리면 자동으로 다시 나온다. */}
+                {(
+                  [
+                    ['상호', site.legalName],
+                    ['대표', company.ceo],
+                    ['사업자등록번호', company.bizNo],
+                    ['주소', company.address],
+                    ['전화', company.tel],
+                    ['이메일', company.email],
+                  ] satisfies ReadonlyArray<readonly [string, string | null]> as ReadonlyArray<
+                    readonly [string, string | null]
+                  >
+                )
+                  .filter((row): row is readonly [string, string] => row[1] !== null)
+                  .map(([label, value]) => (
+                    <div key={label} className="flex gap-8 py-5">
+                      <dt className="w-32 shrink-0 text-ink-muted">{label}</dt>
+                      <dd className="text-ink">{value}</dd>
+                    </div>
+                  ))}
               </dl>
             </Reveal>
           </div>
