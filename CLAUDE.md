@@ -20,6 +20,7 @@
 | 새 페이지·섹션 추가 | `homepage-section` |
 | DB 스키마·문의 폼 필드 변경 | `homepage-supabase` |
 | 변경 후 검증 | `homepage-verify` |
+| 전자금융거래법 개정 반영·조문 대조 | `efin-law-check` |
 
 ## 코드 규칙
 
