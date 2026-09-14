@@ -161,6 +161,29 @@ curl -s localhost:3100/ | grep -o 'viewBox="0 0 28 33"' | wc -l
 for p in $(ps -eo pid,args | grep '[n]ext-serv' | awk '{print $1}'); do kill -9 "$p"; done
 ```
 
+### 함정 13 — 상담 폼 자동 제출은 **봇 가드에 걸린다**
+
+`/contact` 폼에는 `startedAt` 타이밍 가드가 있다 — 렌더부터 제출까지
+`MIN_FILL_MS`(2초) 미만이면 봇으로 본다. Playwright 는 즉시 채우고 누르므로
+**항상 걸린다.** 화면에는 `잠시 후 다시 시도해 주세요.` 만 나와 레이트리밋이나
+서버 오류로 오인하기 쉽다(honeypot `company_website` 도 함께 있다).
+
+→ 제출 전에 **`await p.waitForTimeout(3000)` 이상**을 준다. 가드가 동작한 것이지
+  버그가 아니다.
+
+### 함정 14 — Supabase 없이 등록 경로를 검증하려면 **PostgREST 스텁**
+
+문의 등록·알림 경로는 DB 쓰기를 타야 실행된다. 로컬에 Supabase 가 없을 때는
+`SUPABASE_URL` 을 30줄짜리 스텁 서버로 돌리면 **실제 코드 경로 그대로** 확인된다.
+
+```js
+// POST /rest/v1/<table> → Accept 에 pgrst.object 가 있으면 단일 객체, 없으면 배열
+// GET  /rest/v1/<table> → [] (+ Content-Range: 0-0/0)  ← count 쿼리가 이 헤더를 읽는다
+```
+
+`.single()` 은 `Accept: application/vnd.pgrst.object+json` 을 보내므로 **배열을
+돌려주면 조용히 실패한다.** 이것만 맞추면 나머지는 대충이어도 된다.
+
 ### 함정 11 — `.env.local` 의 `$` 는 **변수로 해석된다**
 
 `ADMIN_PASSWORD_HASH` 는 `scrypt$<salt>$<hash>` 형식이다. 그대로 넣으면 Next 의
