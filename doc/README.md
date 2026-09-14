@@ -16,6 +16,18 @@
 | [08-worklog.md](./08-worklog.md) | 작업 기록 |
 | [09-deployment.md](./09-deployment.md) | **Supabase + Vercel 연동 절차** (비밀키를 채팅에 노출하지 않는 경로) |
 | [10-admin.md](./10-admin.md) | **관리자 페이지 운영** — 활성화 절차, 사고 대응, 감사 로그 조회 |
+| [11-sql-runbook.md](./11-sql-runbook.md) | **실행 가능한 SQL 모음** — 마이그레이션 점검, pg_cron 진단, 파기 잡 확인 |
+| [12-build-from-scratch.md](./12-build-from-scratch.md) | **빈 프로젝트에서 여기까지** — 단계별 순서와 각 단계의 함정 |
+
+## 문서 밖의 산출물
+
+| 무엇 | 어디 | 비고 |
+|---|---|---|
+| 스키마 생성 SQL | `supabase/migrations/` | **원본.** 문서에 복사하지 않는다 |
+| 브랜드 자산 | `brand/` + `app/icon.svg` · `apple-icon.png` · `opengraph-image.png` | `scripts/generate-brand-assets.mjs` 가 생성 — 손으로 고치지 않는다 |
+| 메일 알림 스크립트 | `scripts/apps-script/inquiry-mail-notify.gs` | Google 계정에서 돌지만 **원본은 여기** |
+| 검증용 스텁 | `scripts/verify/` | 가짜 Slack·가짜 Supabase·Apps Script 테스트 |
+| 반복 작업 절차 | `.claude/skills/` | apple-design · homepage-{content,section,supabase,verify} |
 
 ## 문서 작성 규칙
 

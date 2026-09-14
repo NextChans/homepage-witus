@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "screenshot": "node scripts/screenshot.mjs"
+    "screenshot": "node scripts/screenshot.mjs",
+    "verify:mail": "node scripts/verify/mail-notify.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
