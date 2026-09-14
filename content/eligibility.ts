@@ -3,12 +3,30 @@
  *
  * ## ⚠️ 공개 전 반드시 법무 검토를 받는다
  *
- * 이 파일의 금액·조문·판정 기준은 **공개 자료를 종합한 것**이며 법령 원문을
- * 한 줄씩 대조하지 않았다(법제처가 SPA 라 본문 추출 실패). 기준일은
- * `LAW_BASIS.checkedAt` 이다. **틀리면 도구의 값이 0이 아니라 음수가 된다** —
- * 규제를 안다고 내건 회사가 규제를 틀리게 안내한 것이 되기 때문이다.
+ * 조문·금액은 아래 `LAW_BASIS.sources` 의 원문(법제처 PDF)과 한 줄씩 대조했다.
+ * 그러나 **대조했다는 것과 해석이 맞다는 것은 다르다** — 어떤 사업 구조가 어느
+ * 조문에 걸리는지는 법률 판단이다. `features.eligibilityCheck` 가 꺼져 있는 이유다.
  *
- * → `features.eligibilityCheck` 가 꺼져 있는 이유다. 검토 후 켠다.
+ * 틀리면 이 도구의 값은 0이 아니라 **음수**가 된다. 규제를 안다고 내건 회사가
+ * 규제를 틀리게 안내한 것이 되기 때문이다.
+ *
+ * ## 2026-09-14 원문 대조에서 실제로 나온 오류 (기록용)
+ *
+ * 공개 자료만 보고 쓴 초안에 아래가 있었다. 원문을 보고서야 잡혔다.
+ *
+ * 1. **선불 1가맹점 면제** — "다른 곳 1군데면 면제" 로 썼다. 법 제28조③1가는
+ *    "하나의 가맹점(**가맹점의 사업주가 동일한 경우로 한정**한다)" 이다. 사업주가
+ *    다르면 면제가 아니다.
+ * 2. **PG 면제의 미래** — "2026. 12. 17. 개정이 중개업 부수 정산을 제외한다" 고
+ *    썼다. 정반대다. 법 제28조③2(정보만 전달하는 PG 면제)가 **삭제**된다.
+ *    지금 면제받는 쪽이 등록 대상이 된다.
+ * 3. **분기 거래총액 기준** — 300억만 알고 있었다. 현행 법 제30조③의 기준은
+ *    **30억**이고, 300억은 2026. 12. 17. 개정이 신설하는 세 번째 구간이다.
+ * 4. **선불충전금 100% 별도관리** — 개정으로 생기는 의무로 적었다. 영 제13조의2②가
+ *    이미 100분의 100을 요구한다. **현행 의무**다.
+ *
+ * 공통점: 넷 다 "숫자는 맞는데 붙는 자리가 틀렸다". 조문 번호를 함께 적지 않으면
+ * 이런 건 검토자도 못 잡는다 → 그래서 `Verdict.lawRef` 를 둔다.
  *
  * ## 왜 결정 트리가 아니라 독립 판정인가
  *
@@ -16,7 +34,8 @@
  * (PG) 포인트도 발행하고(선불) 구매확정까지 대금을 잡아두면(결제대금예치)
  * 셋 다이다. 트리는 답을 하나만 내므로 **둘을 놓친다.**
  *
- * 유지보수도 이쪽이 낫다 — 법이 바뀌어 한 업종 기준이 달라져도 그 줄만 고친다.
+ * 그리고 영 제17조④가 **둘 이상이면 자본금을 합산**하라고 한다(50억 상한).
+ * 트리로는 이 합산을 애초에 보여줄 수 없다.
  *
  * ## 왜 '모르겠다' 가 기능인가
  *
@@ -25,28 +44,51 @@
  * 케이스는 원래 사람이 봐야 하므로 **상담 전환에도 이쪽이 낫다.**
  */
 
-/** 근거 기준일. 법령이 바뀌면 이 값과 아래 기준을 함께 고친다. */
+/** 근거 기준일과 대조한 원문. 법령이 바뀌면 이 값과 아래 기준을 함께 고친다. */
 export const LAW_BASIS = {
-  /** 이 파일의 기준을 확인한 날 */
+  /** 이 파일의 기준을 원문과 대조한 날 */
   checkedAt: '2026-09-14',
-  /** 현재 시행 중인 주요 개정 */
-  current: '2024. 9. 15. 시행 (2023. 9. 14. 공포)',
+  /** 현재 시행 중인 법률 */
+  current: '2026. 4. 28. 시행 (법률 제21205호 일부 · 대통령령 제36281호)',
   /** 곧 시행되는 개정 — 결과를 이 시점 전후로 나눠 보여주는 근거 */
   upcoming: { date: '2026-12-17', promulgated: '2025-12-16' },
+  /** 대조한 원문. 재검토 때 같은 것을 다시 받으면 된다. */
+  sources: [
+    '전자금융거래법 (법률 제21205호, 시행 2025. 12. 16.)',
+    '전자금융거래법 (법률 제21205호, 시행 2026. 12. 17.)',
+    '전자금융거래법 시행령 (대통령령 제36281호, 시행 2026. 4. 28.)',
+  ],
 } as const
 
 export type Answer = 'yes' | 'no' | 'unsure'
-/** 선불 사용처 범위. 2024 개정으로 **가맹점 수**가 기준이 됐다(업종 기준 폐지). */
-export type Reach = 'self' | 'one' | 'many' | 'unsure'
+
+/**
+ * 선불 사용처 범위.
+ *
+ * 법 제28조③1가의 면제는 "하나의 가맹점(**사업주가 동일한 경우로 한정**)" 이다.
+ * 따라서 가르는 선은 가맹점 **개수**가 아니라 **사업주가 같은가**이다.
+ * `others` 는 1곳이든 10곳이든 사업주가 다르면 전부 여기에 들어온다.
+ */
+export type Reach = 'self' | 'sameOwner' | 'others' | 'unsure'
+
+/**
+ * 분기별 전자금융거래 총액 구간.
+ *
+ * - 현행 법 제30조③: **30억** 이하(3억) / 초과(5억 이상 → 영 제17조③이 상향)
+ * - 2026. 12. 17.: 30억 이하(3억) / 30억~**300억**(5억) / 300억 초과(10억)
+ *
+ * 그래서 두 경계를 모두 물어야 현재와 이후를 같이 답할 수 있다.
+ */
+export type Volume = 'under30' | 'to300' | 'over300' | 'unsure'
 
 export type Answers = {
-  /** 고객 대금이 우리 명의 계좌를 거쳐 판매자에게 가는가 */
+  /** 카드사·은행과 결제 승인/취소 정보를 주고받는가 (PG 정의의 앞단) */
+  paymentInfo: Answer
+  /** 고객 대금이 우리 명의 계좌를 거쳐 판매자에게 가는가 (면제 여부를 가른다) */
   funds: Answer
-  /** (funds=yes) 결제대행이 주된 사업인가, 중개 플랫폼의 부수 정산인가 */
-  fundsPrimary: Answer
   /** 충전식 잔액(포인트·머니)을 발행하는가 */
   prepaid: Answer
-  /** (prepaid=yes) 발행사 외 몇 곳에서 쓸 수 있는가 */
+  /** (prepaid=yes) 발행사 외 어디서 쓸 수 있는가 */
   prepaidReach: Reach
   /** (prepaid=yes) 미사용 충전잔액이 30억 이상인가 */
   prepaidBalanceOver: Answer
@@ -58,13 +100,13 @@ export type Answers = {
   transfer: Answer
   /** 고지 내역을 대신 보여주고 수납받는가 */
   billing: Answer
-  /** 분기 전자금융거래 총액이 300억을 넘는가 (2026 개정 자본금 기준) */
-  volumeOver: Answer
+  /** 분기 전자금융거래 총액 구간 — 자본금을 가른다 */
+  volume: Volume
 }
 
 export const EMPTY_ANSWERS: Answers = {
+  paymentInfo: 'unsure',
   funds: 'unsure',
-  fundsPrimary: 'unsure',
   prepaid: 'unsure',
   prepaidReach: 'unsure',
   prepaidBalanceOver: 'unsure',
@@ -72,13 +114,13 @@ export const EMPTY_ANSWERS: Answers = {
   escrow: 'unsure',
   transfer: 'unsure',
   billing: 'unsure',
-  volumeOver: 'unsure',
+  volume: 'unsure',
 }
 
 // ── 질문 ────────────────────────────────────────────────────────────────────
 //
 // ⚠️ **비전문가가 답할 수 있는 말로 쓴다.** "전자지급결제대행에 해당하십니까"
-//    는 물어봐야 소용이 없다. 자금이 어떻게 흐르는지를 묻는다.
+//    는 물어봐야 소용이 없다. 자금과 정보가 어떻게 흐르는지를 묻는다.
 
 export type Choice = { value: string; label: string }
 export type Question = {
@@ -98,18 +140,19 @@ const YES_NO: readonly Choice[] = [
 
 export const questions: readonly Question[] = [
   {
-    key: 'funds',
-    text: '고객이 낸 대금이 우리 명의 계좌를 거쳐 판매자에게 가나요?',
-    help: '고객이 판매자에게 직접 송금하고 우리는 중개만 한다면 "아니오" 입니다.',
+    key: 'paymentInfo',
+    text: '카드사·은행과 결제 승인·취소 정보를 주고받나요?',
+    help:
+      '법 제2조제19호는 “지급결제정보를 송신하거나 수신하는 것” 자체를 전자지급결제대행으로 봅니다. ' +
+      '자금을 만지지 않고 정보만 전달해도 해당합니다.',
     choices: YES_NO,
   },
   {
-    key: 'fundsPrimary',
-    text: '결제대행이 주된 사업인가요?',
+    key: 'funds',
+    text: '고객이 낸 대금이 우리 명의 계좌를 거쳐 판매자에게 가나요?',
     help:
-      '중개 플랫폼(오픈마켓·예약 등)을 운영하면서 부수적으로 정산만 대신하는 경우라면 "아니오" 입니다. ' +
-      '2026. 12. 17. 시행 개정에서 이 경우를 적용 대상에서 제외합니다.',
-    onlyIf: '위 질문에 "예" 라고 답하신 경우',
+      '자금을 수수하지 않고 정보만 단순 전달하면 지금은 등록이 면제됩니다(영 제15조⑦). ' +
+      '다만 이 면제 조항은 2026. 12. 17.에 삭제됩니다.',
     choices: YES_NO,
   },
   {
@@ -120,13 +163,15 @@ export const questions: readonly Question[] = [
   },
   {
     key: 'prepaidReach',
-    text: '그 잔액을 발행사인 우리 말고 다른 사업자에게도 쓸 수 있나요?',
-    help: '2024. 9. 15. 개정으로 업종 기준이 없어지고 가맹점 수가 기준이 되었습니다.',
+    text: '그 잔액을 어디에서 쓸 수 있나요?',
+    help:
+      '법 제28조제3항제1호 가목의 면제는 “하나의 가맹점(가맹점의 사업주가 동일한 경우로 한정)” 입니다. ' +
+      '가맹점 수가 아니라 사업주가 같은지가 기준입니다.',
     onlyIf: '충전식 잔액을 발행하는 경우',
     choices: [
-      { value: 'self', label: '우리에게만 쓴다' },
-      { value: 'one', label: '다른 곳 1군데' },
-      { value: 'many', label: '다른 곳 2군데 이상' },
+      { value: 'self', label: '발행사인 우리에게만 쓴다' },
+      { value: 'sameOwner', label: '사업주가 같은 가맹점 한 곳에서만 쓴다' },
+      { value: 'others', label: '사업주가 다른 곳에서도 쓴다' },
       { value: 'unsure', label: '모르겠다' },
     ],
   },
@@ -139,7 +184,9 @@ export const questions: readonly Question[] = [
   {
     key: 'prepaidIssueOver',
     text: '연간 총발행액이 500억 원 이상인가요?',
-    help: '충전잔액 기준과 발행액 기준을 **둘 다** 밑돌아야 면제됩니다.',
+    help:
+      '법 제28조제3항제1호 나목은 발행잔액 “및” 연간 총발행액입니다. ' +
+      '두 기준을 둘 다 밑돌아야 면제됩니다(영 제15조⑤ — 30억 원 / 500억 원).',
     onlyIf: '충전식 잔액을 발행하는 경우',
     choices: YES_NO,
   },
@@ -159,11 +206,18 @@ export const questions: readonly Question[] = [
     choices: YES_NO,
   },
   {
-    key: 'volumeOver',
-    text: '분기 전자금융거래 총액이 300억 원을 넘나요?',
-    help: '2026. 12. 17. 시행 개정에서 이 구간의 PG 자본금 요건이 올라갑니다.',
-    onlyIf: '결제대행에 해당하는 경우',
-    choices: YES_NO,
+    key: 'volume',
+    text: '분기별 전자금융거래 총액이 어느 정도인가요?',
+    help:
+      '자본금 요건을 가르는 기준입니다. 300억 원 구간은 2026. 12. 17. 시행 개정으로 새로 생깁니다. ' +
+      '산정 기준은 금융위원회가 정합니다.',
+    onlyIf: '결제대행·결제대금예치·전자고지결제에 해당하는 경우',
+    choices: [
+      { value: 'under30', label: '30억 원 이하' },
+      { value: 'to300', label: '30억 초과 ~ 300억 원 이하' },
+      { value: 'over300', label: '300억 원 초과' },
+      { value: 'unsure', label: '모르겠다' },
+    ],
   },
 ]
 
@@ -176,13 +230,18 @@ export type Verdict = {
   name: string
   /** 등록인지 허가인지 */
   license: '등록' | '허가'
+  /** 현행 시행령 기준 자본금. 검토자가 대조할 수 있도록 조문을 함께 낸다 */
   capital: string
-  /** 현재(2024. 9. 15. 시행 기준) 판정 */
+  /** 현재 시행 기준 판정 */
   now: Level
-  /** 2026. 12. 17. 이후 판정. 현재와 같으면 생략 가능 */
+  /** 2026. 12. 17. 이후 판정. 현재와 같으면 생략 */
   after?: Level
   /** 왜 그렇게 봤는지 — 화면에 그대로 보여준다 */
   reason: string
+  /** 2026. 12. 17. 이후가 달라지는 이유 */
+  afterReason?: string
+  /** 근거 조문. **이걸 빼면 법무 검토가 불가능해진다** */
+  lawRef: string
   /** 이어질 서비스 페이지 slug */
   serviceSlug: string
 }
@@ -192,36 +251,69 @@ function anyUnsure(...values: string[]): boolean {
   return values.includes('unsure')
 }
 
+/**
+ * 분기 거래총액 구간별 자본금 (영 제17조②③).
+ *
+ * 현행 시행령은 **30억 이하 / 초과** 두 구간뿐이라 `to300` 과 `over300` 이 같은
+ * 금액이 된다. 2026. 12. 17. 개정 법률이 세 구간으로 나누므로 시행령도 따라
+ * 바뀔 것이고, 그때 이 표를 고친다.
+ */
+function capitalFor(volume: Volume, small: string, large: string): string {
+  if (volume === 'under30') return `${small} (영 제17조②)`
+  if (volume === 'to300' || volume === 'over300') return `${large} (영 제17조③)`
+  return `${small} ~ ${large} — 분기 거래총액에 따라 (영 제17조②③)`
+}
+
 export function evaluate(a: Answers): Verdict[] {
   const out: Verdict[] = []
 
   // ── 전자지급결제대행 (PG) ────────────────────────────────────────────────
+  //
+  // ⚠️ 이 업종만 두 축으로 본다.
+  //   - 해당 여부: 결제정보를 송·수신하는가 (법 제2조19호)
+  //   - 면제 여부: 자금을 수수하는가 (법 제28조③2 + 영 제15조⑦)
+  // 초안은 `funds` 하나로 둘 다 판단해서, **정보만 전달하는 사업자를 아예
+  // 해당 없음으로 떨어뜨렸다.** 그쪽이야말로 2026. 12. 17.에 등록 대상이 된다.
   {
-    const now: Level = anyUnsure(a.funds) ? 'unsure' : a.funds === 'yes' ? 'likely' : 'unlikely'
-    // 2026. 12. 17. — 중개업 부수 정산은 적용 대상에서 제외된다.
-    const after: Level =
-      now === 'likely' && a.fundsPrimary === 'no'
-        ? 'unlikely'
-        : now === 'likely' && a.fundsPrimary === 'unsure'
-          ? 'unsure'
-          : now
+    let now: Level
+    let reason: string
+    let after: Level | undefined
+    let afterReason: string | undefined
+
+    if (anyUnsure(a.paymentInfo)) {
+      now = 'unsure'
+      reason = '결제정보 송·수신 여부에 대한 답이 없어 판정하지 않았습니다.'
+    } else if (a.paymentInfo === 'no' && a.funds !== 'yes') {
+      now = a.funds === 'unsure' ? 'unsure' : 'unlikely'
+      reason =
+        a.funds === 'unsure'
+          ? '자금 흐름에 대한 답이 없어 판정하지 않았습니다.'
+          : '결제정보를 주고받지도, 대금을 수수하지도 않는 구조로 보입니다.'
+    } else if (a.funds === 'unsure') {
+      now = 'unsure'
+      reason = '전자지급결제대행에는 해당하나, 자금 수수 여부를 알아야 면제가 판정됩니다.'
+    } else if (a.funds === 'no') {
+      now = 'exempt'
+      reason =
+        '자금을 수수하지 않고 결제정보만 전달하는 구조로 보여 현재는 등록이 면제됩니다.'
+      after = 'likely'
+      afterReason =
+        '이 면제 근거인 법 제28조제3항제2호가 삭제됩니다. 면제 없이 등록 대상이 됩니다.'
+    } else {
+      now = 'likely'
+      reason = '고객 대금이 귀사 명의 계좌를 거쳐 판매자에게 갑니다.'
+    }
+
     out.push({
       slug: 'pg',
       name: '전자지급결제대행업 (PG)',
       license: '등록',
-      capital: '10억 원 (소규모 3억 원)',
+      capital: capitalFor(a.volume, '3억 원', '10억 원'),
       now,
       after,
-      // ⚠️ 시점 이야기를 여기 쓰지 않는다. 화면이 `after` 를 따로 보여주므로
-      //    사유에도 넣으면 "2026. 12. 17. 이후에는…" 이 두 번 나온다(초안이 그랬다).
-      reason:
-        now === 'likely'
-          ? a.fundsPrimary === 'no'
-            ? '대금이 귀사 계좌를 거치지만 중개업의 부수 정산으로 보입니다.'
-            : '고객 대금이 귀사 명의 계좌를 거쳐 판매자에게 갑니다.'
-          : now === 'unlikely'
-            ? '고객이 판매자에게 직접 지급하는 구조로 보입니다.'
-            : '자금 흐름에 대한 답이 없어 판정하지 않았습니다.',
+      reason,
+      afterReason,
+      lawRef: '법 제2조19호 · 제28조②4호 · 제28조③2호(2026. 12. 17. 삭제) · 영 제15조⑦',
       serviceSlug: 'pg-agency',
     })
   }
@@ -241,29 +333,34 @@ export function evaluate(a: Answers): Verdict[] {
       reason = '사용처 범위에 대한 답이 없어 판정하지 않았습니다.'
     } else if (a.prepaidReach === 'self') {
       level = 'unlikely'
-      reason = '발행사 안에서만 쓰이는 자가형으로 보입니다.'
-    } else if (a.prepaidReach === 'one') {
+      reason =
+        '발행사 안에서만 쓰이면 법 제2조제14호의 “발행인 외의 제3자” 요건을 채우지 못해 ' +
+        '선불전자지급수단으로 보지 않습니다.'
+    } else if (a.prepaidReach === 'sameOwner') {
       level = 'exempt'
-      reason = '가맹점이 1곳이면 등록이 면제될 수 있습니다. 2곳이 되는 순간 대상이 됩니다.'
+      reason =
+        '사업주가 동일한 하나의 가맹점에서만 쓰이면 등록이 면제될 수 있습니다. ' +
+        '사업주가 다른 곳이 한 곳이라도 더해지는 순간 이 면제는 사라집니다.'
     } else if (anyUnsure(a.prepaidBalanceOver, a.prepaidIssueOver)) {
       level = 'unsure'
       reason = '규모 기준에 대한 답이 없어 판정하지 않았습니다.'
     } else if (a.prepaidBalanceOver === 'no' && a.prepaidIssueOver === 'no') {
       level = 'exempt'
       reason =
-        '충전잔액 30억 원 미만이면서 연간 총발행액 500억 원 미만이라 등록이 면제될 수 있습니다. ' +
+        '발행잔액 30억 원 미만이면서 연간 총발행액 500억 원 미만이라 등록이 면제될 수 있습니다. ' +
         '두 기준 중 하나라도 넘으면 대상이 됩니다.'
     } else {
       level = 'likely'
-      reason = '가맹점이 2곳 이상이고 규모 기준을 넘어 등록 대상으로 보입니다.'
+      reason = '사업주가 다른 곳에서 쓰이고 규모 기준을 넘어 등록 대상으로 보입니다.'
     }
     out.push({
       slug: 'prepaid',
       name: '선불전자지급수단 발행·관리업',
       license: '등록',
-      capital: '20억 원',
+      capital: '20억 원 (영 제17조①3호)',
       now: level,
       reason,
+      lawRef: '법 제2조14호 · 제28조②3호 · 제28조③1호 가목·나목 · 영 제15조⑤',
       serviceSlug: 'efin-license',
     })
   }
@@ -273,14 +370,16 @@ export function evaluate(a: Answers): Verdict[] {
     slug: string
     name: string
     capital: string
-    key: keyof Answers
+    lawRef: string
+    key: 'escrow' | 'transfer' | 'billing'
     yes: string
     no: string
   }[] = [
     {
       slug: 'escrow',
       name: '결제대금예치업 (에스크로)',
-      capital: '10억 원 (소규모 3억 원)',
+      capital: capitalFor(a.volume, '3억 원', '10억 원'),
+      lawRef: '법 제28조②5호 · 영 제15조③1호 · 영 제17조②③',
       key: 'escrow',
       yes: '구매확정 시점까지 대금을 보관하는 구조로 보입니다.',
       no: '대금을 보관하지 않는 것으로 보입니다.',
@@ -288,7 +387,8 @@ export function evaluate(a: Answers): Verdict[] {
     {
       slug: 'transfer',
       name: '전자자금이체업',
-      capital: '30억 원',
+      capital: '30억 원 (영 제17조①1호)',
+      lawRef: '법 제2조12호 · 제28조②1호 · 영 제17조①1호',
       key: 'transfer',
       yes: '고객 계좌에서 직접 출금을 일으키는 구조로 보입니다.',
       no: '직접 출금을 일으키지 않는 것으로 보입니다.',
@@ -296,7 +396,8 @@ export function evaluate(a: Answers): Verdict[] {
     {
       slug: 'billing',
       name: '전자고지결제업',
-      capital: '5억 원 (소규모 3억 원)',
+      capital: capitalFor(a.volume, '3억 원', '5억 원'),
+      lawRef: '법 제28조②5호 · 영 제15조③2호 · 영 제17조②③',
       key: 'billing',
       yes: '고지 내역을 대신 제시하고 수납받는 구조로 보입니다.',
       no: '고지·수납 대행을 하지 않는 것으로 보입니다.',
@@ -312,6 +413,7 @@ export function evaluate(a: Answers): Verdict[] {
       capital: s.capital,
       now: v === 'unsure' ? 'unsure' : v === 'yes' ? 'likely' : 'unlikely',
       reason: v === 'unsure' ? '답이 없어 판정하지 않았습니다.' : v === 'yes' ? s.yes : s.no,
+      lawRef: s.lawRef,
       serviceSlug: 'efin-license',
     })
   }
@@ -319,10 +421,41 @@ export function evaluate(a: Answers): Verdict[] {
   return out
 }
 
+/** 등록 대상으로 보이는 업종 수. 자본금 합산 안내를 낼지 결정한다. */
+function likelyCount(verdicts: Verdict[]): number {
+  return verdicts.filter((v) => v.now === 'likely' || v.after === 'likely').length
+}
+
 /**
- * 2026. 12. 17. 시행 개정에서 추가로 걸리는 의무.
+ * 현재 시행 기준으로 이미 지고 있는 의무 중, 놓치기 쉬운 것.
+ *
+ * ⚠️ 초안은 선불충전금 100% 별도관리를 **개정으로 생기는 의무**로 적었다.
+ *    영 제13조의2②가 이미 100분의 100을 요구한다 — 지금 의무다.
+ */
+export function currentDuties(verdicts: Verdict[]): string[] {
+  const has = (slug: string) => verdicts.some((v) => v.slug === slug && v.now === 'likely')
+  const duties: string[] = []
+
+  if (has('prepaid')) {
+    duties.push(
+      '선불충전금 전액(100분의 100)을 은행 등을 통해 신탁·예치·지급보증보험으로 별도관리해야 합니다 ' +
+        '(법 제25조의2① · 영 제13조의2②). 매 영업일 점검 의무도 함께 붙습니다(영 제13조의6①3호).',
+    )
+  }
+  if (likelyCount(verdicts) > 1) {
+    duties.push(
+      '둘 이상의 업무를 함께 하면 자본금은 각 금액의 합계액입니다. ' +
+        '다만 합계가 50억 원 이상이면 50억 원으로 봅니다 (영 제17조④).',
+    )
+  }
+  return duties
+}
+
+/**
+ * 2026. 12. 17. 시행 개정으로 새로 생기는 의무.
  *
  * 등록 여부와 별개로 **이미 등록한 사업자에게도** 새로 생기는 의무라서 따로 낸다.
+ * 여기 적는 것은 전부 원문에서 확인한 것만이다 — 확인 못 한 것은 적지 않는다.
  */
 export function upcomingDuties(a: Answers, verdicts: Verdict[]): string[] {
   const has = (slug: string) =>
@@ -331,18 +464,30 @@ export function upcomingDuties(a: Answers, verdicts: Verdict[]): string[] {
 
   if (has('pg')) {
     duties.push(
-      '정산대상금액을 은행 등을 통해 신탁·예치·지급보증보험으로 외부관리해야 합니다. ' +
-        '시행 시 60%, 1년 후 80%, 2년 후 100%로 단계 적용됩니다.',
+      '정산대상금액 전액을 은행 등을 통해 신탁·예치·지급보증보험으로 외부관리해야 합니다 ' +
+        '(법 제25조의4①). 부칙 제2조에 따라 시행 후 1년까지 60%, 그다음 1년간 80%, 이후 전액입니다.',
     )
-    if (a.volumeOver === 'yes') {
-      duties.push('분기 거래총액 300억 원 초과 구간이라 자본금 요건이 올라갑니다(구체 금액은 대통령령).')
-    }
   }
-  if (has('prepaid')) {
-    duties.push('선불충전금 전액(100%)을 신탁·예치·지급보증보험으로 별도관리해야 합니다.')
+  if (has('pg') || has('escrow') || has('billing')) {
+    const band =
+      a.volume === 'over300'
+        ? '300억 원 초과 구간(법률 하한 10억 원)'
+        : a.volume === 'to300'
+          ? '30억 초과 ~ 300억 원 구간(법률 하한 5억 원)'
+          : a.volume === 'under30'
+            ? '30억 원 이하 구간(법률 하한 3억 원)'
+            : '해당 구간'
+    duties.push(
+      `자본금 구간이 세 단계로 나뉩니다 — 귀사는 ${band}입니다 (법 제30조③ 개정). ` +
+        '구간별 구체 금액은 대통령령으로 정해지며 아직 개정 전입니다. ' +
+        '이미 등록한 사업자는 시행일부터 1년 이내에 새 요건을 갖춰야 합니다 (부칙 제3조).',
+    )
   }
   if (duties.length > 0) {
-    duties.push('대주주가 바뀌면 사유 발생일부터 15일 이내에 금융위원회의 변경승인·변경등록이 필요합니다.')
+    duties.push(
+      '대주주가 바뀌면 사유 발생일부터 15일 이내에 금융위원회의 변경허가를 받거나 변경등록을 해야 합니다 ' +
+        '(법 제33조의3 신설).',
+    )
   }
   return duties
 }

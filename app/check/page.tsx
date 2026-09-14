@@ -9,6 +9,7 @@ import {
   EMPTY_ANSWERS,
   LAW_BASIS,
   type Level,
+  currentDuties,
   evaluate,
   questions,
   upcomingDuties,
@@ -102,6 +103,7 @@ export default async function CheckPage({ searchParams }: PageProps) {
   const sp = await searchParams
   const { answers, answered } = readAnswers(sp)
   const verdicts = evaluate(answers)
+  const nowDuties = currentDuties(verdicts)
   const duties = upcomingDuties(answers, verdicts)
   const serviceName = new Map<string, string>(services.map((s) => [s.slug, s.name]))
 
@@ -118,12 +120,29 @@ export default async function CheckPage({ searchParams }: PageProps) {
         <Container>
           <div className="mx-auto max-w-3xl">
             {/* ⚠️ 이 고지를 결과 화면에서 떼지 말 것. 푸터 문구로는 부족하다 —
-                이 페이지는 개별 사안에 대한 답처럼 읽히기 때문이다. */}
+                이 페이지는 개별 사안에 대한 답처럼 읽히기 때문이다.
+
+                "법무 검토를 받지 않았다" 를 **맨 앞에** 둔다. 조문 번호가 붙어 있어
+                오히려 확정된 답처럼 읽히기 때문이다. 신뢰도를 올리는 장치가
+                책임 범위를 흐리면 안 된다. */}
             <div className="rounded-2xl border border-hairline bg-surface p-5">
-              <p className="text-[13px] leading-relaxed text-ink-muted">
-                이 진단은 입력하신 내용만으로 판단한 <b className="font-medium text-ink">참고 자료</b>
-                이며, 법률 자문이나 감독당국의 판단을 대신하지 않습니다. 실제 해당 여부는 사업 구조
-                전체를 보아야 확정됩니다. 기준일 {LAW_BASIS.checkedAt} · 현행 {LAW_BASIS.current}
+              <p className="text-[13px] font-medium leading-relaxed text-ink">
+                법무 검토를 받지 않은 단순 참고용입니다.
+              </p>
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+                입력하신 내용만으로 조문을 기계적으로 대조한 결과이며, 법률 자문이나 감독당국의
+                판단을 대신하지 않습니다. 실제 해당 여부는 사업 구조 전체를 보아야 확정됩니다.
+                조문·금액은 아래 원문과 대조했습니다.
+              </p>
+              <ul className="mt-3 space-y-1">
+                {LAW_BASIS.sources.map((src) => (
+                  <li key={src} className="text-[12px] leading-relaxed text-ink-muted">
+                    — {src}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[12px] text-ink-muted">
+                대조 기준일 {LAW_BASIS.checkedAt}
               </p>
             </div>
 
@@ -218,6 +237,7 @@ export default async function CheckPage({ searchParams }: PageProps) {
                     {v.after && v.after !== v.now ? (
                       <dd className="mt-2 text-[15px] leading-relaxed text-ink">
                         <b className="font-semibold">2026. 12. 17. 이후</b> — {LEVEL_LABEL[v.after]}
+                        {v.afterReason ? <> · {v.afterReason}</> : null}
                       </dd>
                     ) : null}
                     {v.now === 'likely' || v.now === 'exempt' ? (
@@ -233,9 +253,35 @@ export default async function CheckPage({ searchParams }: PageProps) {
                         </Link>
                       </dd>
                     ) : null}
+                    {/* 근거 조문. 검토자가 원문과 대조할 수 있어야 이 도구가 검증
+                        가능해진다 — 빼면 "믿거나 말거나" 가 된다. */}
+                    <dd className="mt-2 font-mono text-[12px] leading-relaxed text-ink-muted">
+                      {v.lawRef}
+                    </dd>
                   </div>
                 ))}
               </dl>
+
+              {nowDuties.length > 0 ? (
+                <div className="mt-12">
+                  <h3 className="text-[19px] font-semibold tracking-[-0.02em] text-ink">
+                    지금 이미 적용되는 의무
+                  </h3>
+                  <p className="type-body mt-3 text-[14px]">
+                    등록 대상이라면 등록과 동시에 지게 되는 의무 중 놓치기 쉬운 것입니다.
+                  </p>
+                  <ul className="mt-6 space-y-3">
+                    {nowDuties.map((d) => (
+                      <li key={d} className="flex gap-3 text-[15px] leading-relaxed text-ink">
+                        <span aria-hidden className="mt-px shrink-0 text-accent">
+                          —
+                        </span>
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {duties.length > 0 ? (
                 <div className="mt-12">
