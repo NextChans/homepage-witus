@@ -326,17 +326,73 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 
 `doc/06-security-compliance.md` 의 **높음** 항목과 겹친다.
 
-- [ ] 보관기간(3년) 경과 데이터 삭제 잡 — `pg_cron` (마이그레이션 하단 주석 참고)
-- [ ] 접수 알림 (Slack / 이메일) — 사이트에 "1영업일 회신"을 명시했으므로 알림 없이는 이행 불가
+- [x] ~~보관기간(3년) 경과 데이터 삭제 잡 — `pg_cron`~~ — 등록·활성 (2026-09-14). **다음 날 `data_retention_log` 에 `triggered_by = 'cron'` 행 확인 필요**
+- [x] ~~접수 알림 (Slack)~~ — 완료. 프로덕션 수신 확인 (2026-09-14). 6절 참고
 - [ ] `SUPABASE_SECRET_KEY` 로테이션 주기와 접근권한자 명단 정의
 - [ ] CSP 헤더 추가 (`next.config.ts`)
-- [ ] `app/privacy/page.tsx` 4항의 **국외 이전 해당 여부 법무 확정** (리전은 반영 완료)
+- [x] ~~`app/privacy/page.tsx` 4항 **국외 이전**~~ — 확정 (2026-09-14, ADR-029).
+      "가능성 있음" 으로 명시하고 법 제28조의8 ② 고지 5항목을 모두 기재했다.
+      아래 배경은 그 판단의 근거로 남긴다.
       - 저장 리전은 서울이지만 Supabase 는 국외 법인이고, [공식 문서가 백업·로그·외부 반출·
         Edge Function 실행·재위탁 업체가 데이터 residency 와 국외이전 판단에 영향을 줄 수 있다고
         명시](https://supabase.com/docs/guides/security/gdpr-compliance)한다.
         "국외 이전 없음" 으로 단정하지 않았다.
 - [ ] `doc/05-content-guide.md` 의 **필수 교체** 항목 (실제 회사 정보)
 
+---
+
+## 6. 접수 알림 (Slack)
+
+### 6-1. 웹훅 채널을 옮길 때
+
+**Incoming Webhook 은 채널 하나에 고정된다.** 기존 URL 을 다른 채널로 돌릴 수 없으므로
+**새로 발급받아 교체**해야 한다. 순서를 지킨다.
+
+1. https://api.slack.com/apps → 앱 → **Features → Incoming Webhooks**
+2. **Add New Webhook to Workspace** → 새 채널 선택 → 허용 → **새 URL 복사**
+3. Vercel → **Settings → Environment Variables** → `SLACK_INQUIRY_WEBHOOK_URL` 교체 (Production)
+4. **재배포** — ⚠️ 저장만으로는 반영되지 않는다
+5. `witus.kr/admin` → **접수 알림 채널 → 테스트 메시지 보내기** 로 확인 (ADR-030)
+6. ⚠️ **옛 웹훅을 Remove 한다.** 빠뜨리기 쉽다. 남겨두면 살아 있는 URL 이 떠돌고,
+   **Slack 웹훅은 인증이 없어서 아는 사람은 누구나 그 채널에 글을 쓸 수 있다.**
+
+앱 이름·아이콘은 **Basic Information → Display Information** 에서 바꾼다.
+웹훅 URL 은 유지되므로 재발급도 재배포도 필요 없다.
+
+### 6-2. 메일 도착 알림 (Google Apps Script)
+
+`wituskr@gmail.com` 으로 메일이 오면 같은 채널에 **"왔다" 만** 알린다.
+원본 스크립트는 `scripts/apps-script/inquiry-mail-notify.gs` 다 —
+**Apps Script 편집기 안에서만 고치지 말고 저장소를 고치고 붙여넣는다.**
+
+> **왜 메일을 자동으로 `inquiries` 에 넣지 않는가** — ADR-031.
+> 요약: 메일은 상대가 뭘 보낼지 통제할 수 없어 주민번호·계좌번호가 그대로 들어올 수
+> 있다. **알림은 자동, 저장은 사람.** 그 사람이 곧 민감정보 필터다.
+
+1. https://script.google.com → **새 프로젝트** (반드시 `wituskr@gmail.com` 계정으로)
+2. `Code.gs` 내용을 지우고 `scripts/apps-script/inquiry-mail-notify.gs` 전체를 붙여넣는다
+3. **⚙️ 프로젝트 설정 → 스크립트 속성 → 속성 추가**
+   - 속성: `SLACK_INQUIRY_WEBHOOK_URL`
+   - 값: 웹훅 URL
+   - ⚠️ **코드에 URL 을 적지 않는다.** 프로젝트를 공유·내보내는 순간 함께 나간다
+4. 함수 선택기에서 **`testConnection`** → **실행** → Gmail·외부요청 권한 승인
+   → 채널에 연결 테스트 메시지가 뜨면 성공
+5. **`installTrigger`** 실행 (5분 간격 트리거 설치). **한 번만** 실행하면 된다 —
+   여러 번 눌러도 기존 트리거를 지우고 다시 만들도록 되어 있다
+
+**보내는 것**: 발신 **도메인** · 통수 · 메일함 링크
+**보내지 않는 것**: 제목 · 본문 · 첨부 · 발신자 전체 주소
+
+⚠️ **제목을 넣고 싶어도 넣지 않는다.** 제목은 상대가 쓰는 값이라
+`홍길동 010-1234-5678 문의드립니다` 같은 것이 그대로 온다. 개인정보가 Slack 에
+장기 보존되고 검색된다 — 접수 알림에서 이름·연락처를 뺀 것과 같은 이유다.
+
+**스팸·뉴스레터가 섞여 시끄러우면** Gmail 필터로 문의 메일에 라벨을 붙이고
+스크립트의 `SEARCH_QUERY` 를 `label:문의 is:unread` 로 바꾼다.
+**소음이 쌓이면 진짜 알림을 아무도 안 본다.**
+
+**중복 알림**은 `slack-notified` 라벨로 막는다. 이 라벨을 Gmail 에서 지우면
+그 메일이 다시 알림 대상이 된다.
 
 ---
 
