@@ -7,7 +7,10 @@ import { formatDateTime } from '@/lib/admin/format'
 import { requireAdminSession } from '@/lib/admin/guard'
 import { listInquiries } from '@/lib/admin/inquiries'
 import { CHANNEL_LABEL, STATUS_LABEL, isInquiryStatus, isIntakeChannel } from '@/lib/admin/status'
+import { can } from '@/lib/admin/roles'
+import { isSlackNotifyConfigured } from '@/lib/notify/slack'
 import { isSupabaseConfigured } from '@/lib/supabase/server'
+import { sendNotifyTest } from './actions'
 
 export const metadata: Metadata = {
   title: '상담 문의',
@@ -22,8 +25,43 @@ const serviceLabel = new Map<string, string>([
   ['other', '기타 문의'],
 ])
 
-export default async function AdminInquiriesPage() {
+/**
+ * 점검 결과 코드 → 사람이 읽는 문장.
+ *
+ * ⚠️ 원인 문자열을 URL 에 그대로 싣지 않고 **코드로만** 주고받는다. URL 은 브라우저
+ *    기록과 리퍼러에 남는다. 여기서 문장으로 바꿔 보여 준다.
+ */
+function notifyMessage(code: string): { tone: 'ok' | 'bad'; text: string } | null {
+  if (!code) return null
+  if (code === 'ok') {
+    return { tone: 'ok', text: 'Slack 으로 테스트 메시지를 보냈습니다. 채널을 확인하세요.' }
+  }
+  if (code === 'unset') {
+    return {
+      tone: 'bad',
+      text: 'SLACK_INQUIRY_WEBHOOK_URL 이 이 환경에 없습니다. Vercel 환경변수를 확인하고 재배포하세요.',
+    }
+  }
+  if (code.startsWith('http-')) {
+    return {
+      tone: 'bad',
+      text: `Slack 이 ${code.slice(5)} 를 반환했습니다. 웹훅이 폐기됐거나 URL 이 잘못됐습니다 — 재발급 후 환경변수를 교체하세요.`,
+    }
+  }
+  if (code.startsWith('err-')) {
+    return {
+      tone: 'bad',
+      text: `전송 중 ${code.slice(4)} 가 발생했습니다. 네트워크 차단 또는 타임아웃(5초)입니다.`,
+    }
+  }
+  return null
+}
+
+type PageProps = { searchParams: Promise<{ notify?: string }> }
+
+export default async function AdminInquiriesPage({ searchParams }: PageProps) {
   const session = await requireAdminSession()
+  const notify = notifyMessage((await searchParams).notify ?? '')
   const context = await auditContext()
   await logAdminAction({ action: 'list_viewed', actor: session.username, context })
 
@@ -141,6 +179,46 @@ export default async function AdminInquiriesPage() {
           </table>
         </div>
       )}
+
+      {/* ── 접수 알림 채널 점검 ──────────────────────────────────────────
+          알림 전송은 실패해도 throw 하지 않으므로(접수 우선) **조용히 안 온다.**
+          그 침묵을 깨는 유일한 수단이라 관리자 화면에 둔다.
+          ⚠️ 관리자 전용이다(`notify.test`). 상담자에게는 보이지 않는다. */}
+      {can(session.role, 'notify.test') ? (
+        <section className="mt-16 rounded-2xl border border-hairline bg-surface p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-[15px] font-semibold text-ink">접수 알림 채널</h2>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
+                문의가 접수되면 Slack 으로 알립니다(개인정보는 보내지 않고 분야·회사명·접수
+                id 만). 전송 실패는 접수를 막지 않도록 조용히 넘어가므로,
+                <b className="font-medium text-ink"> 배선이 살아 있는지는 눌러서 확인해야 합니다.</b>
+              </p>
+              <p className="mt-2 font-mono text-[12px] text-ink-muted">
+                SLACK_INQUIRY_WEBHOOK_URL: {isSlackNotifyConfigured() ? '설정됨' : '미설정'}
+              </p>
+            </div>
+            <form action={sendNotifyTest}>
+              <button
+                type="submit"
+                className="whitespace-nowrap rounded-full border border-hairline px-4 py-2 text-[13px] font-medium text-ink transition-colors duration-300 hover:bg-surface-2"
+              >
+                테스트 메시지 보내기
+              </button>
+            </form>
+          </div>
+
+          {notify ? (
+            <p
+              className={`mt-4 border-t border-hairline pt-4 text-[13px] leading-relaxed ${
+                notify.tone === 'ok' ? 'text-ink' : 'text-accent'
+              }`}
+            >
+              {notify.text}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
     </Container>
   )
 }

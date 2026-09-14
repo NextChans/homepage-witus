@@ -11,6 +11,7 @@ import {
 import { checkBootstrapCredentials, endSession, isAdminConfigured } from '@/lib/admin/auth'
 import { changeStatus, createInquiry } from '@/lib/admin/inquiry-write'
 import { can } from '@/lib/admin/roles'
+import { requirePermission } from '@/lib/admin/guard'
 import type { LoginState } from '@/lib/admin/login-state'
 import {
   type ManualInquiryFieldErrors,
@@ -26,6 +27,7 @@ import {
   toFieldErrors,
 } from '@/lib/admin/user-schema'
 import { authenticateUser, changeOwnPassword } from '@/lib/admin/users'
+import { notifyTest } from '@/lib/notify/slack'
 
 // ⚠️ 이 파일은 'use server' 다. **async 함수만 export 할 수 있다.**
 //    타입·상수를 내보내면 빌드가 깨진다(invalid-use-server-value).
@@ -317,4 +319,42 @@ export async function changeInquiryStatus(
     status: 'success',
     message: `${STATUS_LABEL[result.from as InquiryStatus] ?? result.from} → ${STATUS_LABEL[toStatus]} 으로 변경했습니다.`,
   }
+}
+
+/**
+ * 접수 알림 채널(Slack) 점검.
+ *
+ * ## 왜 이 기능이 필요한가
+ *
+ * `lib/notify/slack.ts` 의 `notifyInquiry` 는 **실패해도 throw 하지 않는다** —
+ * 알림 실패가 문의 접수를 실패시키면 안 되기 때문이다. 옳은 설계지만 부작용이
+ * 있다: **웹훅이 틀려도 화면상 증상이 전혀 없다.** 게다가 `features.inquiryForm`
+ * 이 꺼져 있는 동안은 호출 지점 자체가 실행되지 않아 확인할 방법이 없다.
+ * 알림이 조용히 안 오는 것은 "1영업일 내 회신" 약속을 조용히 깨는 일이다.
+ *
+ * ## 설계 메모
+ *
+ * - **`redirect` 로 결과를 전달한다.** `useActionState` 를 쓰면 `/admin` 이
+ *   클라이언트 컴포넌트가 되어야 한다. 버튼 하나 때문에 목록 화면 전체를
+ *   클라이언트로 내릴 이유가 없다(CLAUDE.md: Server Component 우선).
+ * - **쿼리스트링에는 코드만 싣는다.** URL 은 브라우저 기록·리퍼러에 남는다.
+ *   웹훅 URL 은 물론이고 원인 문자열을 그대로 싣지 않는다.
+ * - ⚠️ **`redirect()` 는 내부적으로 throw 한다.** `try` 안에서 부르면 catch 가
+ *   삼켜 버린다. 반드시 try 밖에서 호출한다.
+ */
+export async function sendNotifyTest(): Promise<void> {
+  // 권한 부족은 notFound() 다 — 이 기능의 존재를 상담자에게 알리지 않는다.
+  const session = await requirePermission('notify.test')
+
+  const result = await notifyTest(session.username)
+
+  const code = result.ok
+    ? 'ok'
+    : result.reason === 'unconfigured'
+      ? 'unset'
+      : result.reason === 'http'
+        ? `http-${result.status}`
+        : `err-${result.name}`
+
+  redirect(`/admin?notify=${encodeURIComponent(code)}`)
 }

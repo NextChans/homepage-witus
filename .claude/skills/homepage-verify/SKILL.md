@@ -161,6 +161,30 @@ curl -s localhost:3100/ | grep -o 'viewBox="0 0 28 33"' | wc -l
 for p in $(ps -eo pid,args | grep '[n]ext-serv' | awk '{print $1}'); do kill -9 "$p"; done
 ```
 
+### 함정 11 — `.env.local` 의 `$` 는 **변수로 해석된다**
+
+`ADMIN_PASSWORD_HASH` 는 `scrypt$<salt>$<hash>` 형식이다. 그대로 넣으면 Next 의
+dotenv-expand 가 `$<salt>...` 를 **변수 참조로 보고 빈 문자열로 치환**한다.
+작은따옴표로 감싸도 마찬가지다.
+
+증상이 고약하다 — 화면에는 `아이디 또는 비밀번호가 올바르지 않습니다.` 만 나오고,
+서버 로그에만 이렇게 찍힌다:
+
+```
+[admin] 비상 복구 계정 로그인 실패 { usernameMatched: true, passwordMatched: false,
+  storedHashShape: '잘못된 필드수(1, 3이어야 함)' }
+```
+
+→ **`$` 를 `\$` 로 escape 한다.** `storedHashShape` 가 `잘못된 필드수` 면 항상 이것이다.
+(`lib/admin/auth.ts` 가 이 진단 문자열을 남기는 이유가 바로 이 함정이다.)
+
+### 함정 12 — 백그라운드 프로세스는 `( ... &)` 로 띄우면 **다음 호출 전에 죽는다**
+
+`(npx next start &)` 는 그 Bash 호출이 끝날 때 함께 정리된다. 같은 호출 안에서 이어
+`curl` 하면 성공하지만, **다음 도구 호출에서는 이미 없다.**
+→ 서버·수신기처럼 여러 호출에 걸쳐 살아 있어야 하는 것은 Bash 도구의
+`run_in_background: true` 로 띄운다.
+
 ### 함정 10 — Analytics 스크립트는 **서버 HTML 에 없다**
 
 `<Analytics />` 는 클라이언트에서 `<script>` 를 주입한다. 서버 HTML 을 grep 해서
