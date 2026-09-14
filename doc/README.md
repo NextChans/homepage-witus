@@ -18,6 +18,7 @@
 | [10-admin.md](./10-admin.md) | **관리자 페이지 운영** — 활성화 절차, 사고 대응, 감사 로그 조회 |
 | [11-sql-runbook.md](./11-sql-runbook.md) | **실행 가능한 SQL 모음** — 마이그레이션 점검, pg_cron 진단, 파기 잡 확인 |
 | [12-build-from-scratch.md](./12-build-from-scratch.md) | **빈 프로젝트에서 여기까지** — 단계별 순서와 각 단계의 함정 |
+| [13-witus-regulatory-status.md](./13-witus-regulatory-status.md) | **WITUS 자신의 규제 지위** — 전금법 해당 없음 / 여전법 가맹점모집인. 원문 대조 결과 |
 
 ## 문서 밖의 산출물
 
@@ -27,7 +28,7 @@
 | 브랜드 자산 | `brand/` + `app/icon.svg` · `apple-icon.png` · `opengraph-image.png` | `scripts/generate-brand-assets.mjs` 가 생성 — 손으로 고치지 않는다 |
 | 메일 알림 스크립트 | `scripts/apps-script/inquiry-mail-notify.gs` | Google 계정에서 돌지만 **원본은 여기** |
 | 검증용 스텁 | `scripts/verify/` | 가짜 Slack·가짜 Supabase·Apps Script 테스트 |
-| 반복 작업 절차 | `.claude/skills/` | apple-design · homepage-{content,section,supabase,verify} |
+| 반복 작업 절차 | `.claude/skills/` | apple-design · homepage-{content,section,supabase,verify} · efin-law-check |
 
 ## 문서 작성 규칙
 
@@ -35,3 +36,6 @@
 - 임시(placeholder) 데이터를 실데이터로 바꾸면 `05-content-guide.md` 체크박스를 갱신한다.
 - 미해결 리스크는 지우지 않고 `06-security-compliance.md` 에 남겨둔다.
 - 반복되는 작업 절차를 발견하면 문서가 아니라 **스킬**로 만든다 (`.claude/skills/`).
+- **법령 대조는 두 갈래다.** 방문자가 어느 업에 해당하는지는 `content/eligibility.ts`
+  (`/check` 자가진단), WITUS 자신이 어느 법의 어느 지위인지는 `13-witus-regulatory-status.md`.
+  섞지 않는다 — 대상도 결론도 다르다.
