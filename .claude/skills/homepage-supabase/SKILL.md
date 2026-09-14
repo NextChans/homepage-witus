@@ -75,6 +75,58 @@ supabase migration list               # 적용 상태 확인
 CLI 를 쓸 수 없으면 Supabase 대시보드 → SQL Editor 에 파일 내용을 **순서대로** 붙여 실행한다.
 실행 후 `Table Editor → inquiries → RLS enabled` 표시를 눈으로 확인한다.
 
+### ⚠️ "실행했다" 와 "적용됐다" 는 다르다 — 반드시 조회로 확인한다
+
+실제로 겪은 일(2026-09-14): 파기 잡 파일을 실행했는데 **`cron.job` 이 0행**이었다.
+SQL Editor 는 여러 문장을 붙여 실행하면 **마지막 결과만** 보여줘서, 앞 문장이
+실패하거나 실행되지 않아도 화면은 `Success` 로 보인다.
+
+**적용 전** — 지금 무엇이 들어가 있는지 먼저 본다. DB 상태를 모르고 마이그레이션을
+던지지 않는다.
+
+```sql
+select '006 data_retention_log' as 항목, count(*) as 있음
+from information_schema.tables where table_schema='public' and table_name='data_retention_log'
+union all
+select '005 admin_users', count(*) from information_schema.tables
+where table_schema='public' and table_name='admin_users';
+-- 1 = 적용됨, 0 = 미적용
+```
+
+**적용 후** — 만들어진 객체를 **직접 센다.**
+
+```sql
+select
+  (select count(*) from information_schema.columns
+     where table_schema='public' and table_name='inquiries'
+       and column_name in ('retain_until','retain_reason'))            as 컬럼,
+  (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+     where n.nspname='public'
+       and p.proname like 'purge_expired%')                            as 함수,
+  (select count(*) from cron.job where jobname like 'purge-%')         as 잡;
+-- 기대: 2 / 2 / 2
+```
+
+### pg_cron 관련 함정 2가지
+
+1. **`cron.job` 이 0행이어도 "없다" 고 단정하지 않는다.** pg_cron 1.4+ 는
+   `username = current_user` 정책이 걸려 있어 **만든 롤과 조회 롤이 다르면 안 보인다.**
+   → `select current_user, (select count(*) from cron.job) as 전체잡수;` 로 구분한다.
+   Supabase SQL Editor 는 `postgres` 로 도는데, 잡도 같은 롤로 만들면 문제없다.
+2. **`cron.schedule()` 은 성공 시 jobid(숫자)를 반환한다.** 한 문장씩 실행해
+   숫자를 눈으로 확인하는 것이 가장 확실하다.
+
+### 스케줄 시각은 UTC 다
+
+`10 18 * * *` = **03:10 KST**. Supabase 의 pg_cron 은 UTC 로 동작한다.
+KST 로 적으면 9시간 어긋난다.
+
+### 최종 확인은 다음 날이다
+
+**잡이 등록됐다고 도는 것은 아니다.** `data_retention_log` 에
+`triggered_by = 'cron'` 행이 생기는지 **다음 날** 본다. 삭제 대상이 없으면
+`deleted_count = 0` 행이 남는데, **그 0 행이 유일한 증거다.**
+
 ## 5. 환경변수
 
 `.env.example` 을 복사해 `.env.local` 을 만든다. `.env.local` 은 커밋하지 않는다(`.gitignore` 처리됨).

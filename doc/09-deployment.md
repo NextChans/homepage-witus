@@ -340,16 +340,23 @@ curl -sS -o /dev/null -w "www → %{http_code} %{redirect_url}\n" https://www.wi
 
 ---
 
-## 현재 배포 상태 (2026-09-10)
+## 현재 배포 상태 (2026-09-14)
 
 | 항목 | 값 |
 |---|---|
-| Production URL | https://homepage-template-ivory.vercel.app |
-| 커스텀 도메인 | `witus.kr` **구입 완료 · 연결 대기** (3-4절 절차) |
-| 기본 브랜치 | `main` (머지 커밋 `014909e`) |
+| **정규 도메인** | **`https://witus.kr`** — 연결 완료, 인증서 정상 |
+| Vercel 자동 주소 | `homepage-template-ivory.vercel.app` (리다이렉트 설정 필요) |
+| 기본 브랜치 | `main` |
 | 함수 리전 | Seoul (`icn1`) — 대시보드 설정 |
 | Supabase 리전 | 서울 (`ap-northeast-2`) |
+| **마이그레이션** | **`0001`–`0007` 전부 적용 완료 (2026-09-14)** |
+| **파기 잡** | **`pg_cron` 2개 등록·활성** (03:10 / 03:30 KST) |
 | CI | GitHub Actions `typecheck · lint · build` |
+
+> ⚠️ **`www.witus.kr` 과 `*.vercel.app` 이 아직 콘텐츠를 직접 내려준다.**
+> 같은 내용이 세 주소로 나간다. Domains 에서 두 행을 `Redirect to witus.kr` 로
+> 바꿔야 한다(3-4절 1). 확인 명령:
+> `curl -sS -o /dev/null -w '%{http_code} %{redirect_url}\n' https://www.witus.kr/`
 
 > ⚠️ `homepage-template.vercel.app`(팀 접미사 없는 짧은 주소)은 **다른 계정의 프로젝트**다.
 > 프로젝트 이름이 전역 선점되어 있다. 이 주소를 우리 사이트로 착각하지 말 것.
