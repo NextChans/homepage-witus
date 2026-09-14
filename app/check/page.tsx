@@ -135,7 +135,7 @@ export default async function CheckPage({ searchParams }: PageProps) {
         size="headline"
         eyebrow="요건 확인"
         title="등록하려면 무엇이 필요한가."
-        lede="답변한 내용이 전자금융거래법의 어느 정의 문언에 대응하는지 조문 원문과 함께 보여드립니다. 해당 여부는 감독당국이 판단합니다. 개인정보를 입력받지 않으며 답변을 저장하지 않습니다."
+        lede="답변한 내용이 전자금융거래법의 어느 정의 문언에 대응하는지 조문 원문과 함께 보여드립니다."
       />
 
       <Section className="border-t border-hairline pt-16 sm:pt-20">
@@ -156,6 +156,12 @@ export default async function CheckPage({ searchParams }: PageProps) {
                 이 확인은 <b className="font-medium">「전자금융거래법」 기준</b>입니다.
                 「여신전문금융업법」 등 다른 법률의 등록·신고 의무는 다루지 않으므로,
                 여기서 “대응하지 않는다” 고 나와도 별도 확인이 필요합니다.
+              </p>
+              {/* ⚠️ 히어로에서 옮겨온 문구다. 지우지 말 것 — 이 페이지가 플래그로
+                  독립해 있는 근거(처리방침 없이도 켤 수 있다)가 이 약속이다. */}
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
+                개인정보를 입력받지 않으며 답변을 저장하지 않습니다. 답변은 주소창에만 있으므로
+                결과 주소를 그대로 공유하실 수 있습니다.
               </p>
               <ul className="mt-3 space-y-1">
                 {LAW_BASIS.sources.map((src) => (
