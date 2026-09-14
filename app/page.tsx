@@ -1,5 +1,5 @@
 import { CtaBand } from '@/components/cta-band'
-import { FeatureSplit, PanelStats } from '@/components/feature-split'
+import { FeatureSplit } from '@/components/feature-split'
 import { Hero } from '@/components/hero'
 import { LogoStrip } from '@/components/logo-strip'
 import { MetricsBand } from '@/components/metrics-band'
@@ -16,7 +16,7 @@ const journey = [
   },
   { step: '02', title: '설계', body: '규제 요건과 기술 요건을 하나의 일정표로 합칩니다.' },
   { step: '03', title: '실행', body: '서류 제출과 연동 일정, 검증을 나란히 관리합니다.' },
-  { step: '04', title: '운영', body: '오픈 후 정기 보고와 장애 대응 체계를 이관합니다.' },
+  { step: '04', title: '운영', body: '오픈 후 정기 보고 체계와 장애 접수 창구를 정리해 넘겨드립니다.' },
 ] as const
 
 export default function HomePage() {
@@ -25,13 +25,20 @@ export default function HomePage() {
       <Hero
         eyebrow="전자금융 인프라 파트너"
         title={
+          // ⚠️ 줄바꿈을 **명시한다.** `display` 스케일에서 브라우저에 맡기면
+          //    `복잡한 온오프라인 결제.` 가 스스로 두 줄로 꺾여 **1440px 에서도
+          //    3줄**이 된다(의도는 2줄). 후보 5개를 실제 렌더로 측정해 이 분할만
+          //    390 · 768 · 1440px 에서 의도대로 유지되는 것을 확인했다.
+          //    ⚠️ 문구를 늘리면 **다시 측정한다.** 한 글자가 줄 수를 바꾼다.
           <>
-            복잡한 결제.
+            복잡한
+            <br />
+            온오프라인 결제.
             <br />
             단순한 시작.
           </>
         }
-        lede="단말기와 키오스크부터 전자금융업 등록, 금융 클라우드, 오픈뱅킹 연동까지. 흩어진 절차를 한 팀이 끝냅니다."
+        lede="오프라인 결제 단말기와 키오스크부터 PG 가맹점 등록, 전자금융업 등록과 금융 클라우드, 오픈뱅킹 컨설팅까지. 흩어진 절차를 한 팀이 끝냅니다."
         actions={
           <>
             <ButtonLink href="/contact">상담 신청</ButtonLink>
@@ -63,46 +70,6 @@ export default function HomePage() {
             '보완 요청이 오면 서류와 연동 사항을 함께 챙김',
             '오픈 이후 정기 보고 주체까지 사전에 지정',
           ]}
-          panel={
-            <PanelStats
-              // ⚠️ 근거 자료 확보 전까지 플레이스홀더. content/site.ts 의 metrics 주석 참고.
-              rows={[
-                { label: '평균 등록 소요', value: 'XX일' },
-                { label: '보완 요청 대응', value: 'X영업일' },
-                { label: '오픈 일정 준수율', value: 'XX%' },
-              ]}
-            />
-          }
-        />
-      </div>
-
-      <div className="border-t border-hairline">
-        <FeatureSplit
-          reverse
-          eyebrow="정합성"
-          title={
-            <>
-              돈이 오가는 시스템은
-              <br />
-              대조가 전부입니다.
-            </>
-          }
-          body="승인과 정산, 원장이 어긋나는 순간이 사고의 시작입니다. 3자 대조 기준과 감사 로그 요건을 도입 단계에서 함께 정합니다."
-          points={[
-            '카드사 – PG – 내부 원장 3자 정산 대조 기준 수립',
-            '거래 단위 멱등키와 재시도 정책 정의',
-            '감사 로그 보존 기간과 접근 권한 분리 설계',
-          ]}
-          panel={
-            <PanelStats
-              // ⚠️ 근거 자료 확보 전까지 플레이스홀더.
-              rows={[
-                { label: '일일 정산 대조', value: 'OO' },
-                { label: '거래 로그 보존', value: 'X년' },
-                { label: '장애 대응', value: 'OO' },
-              ]}
-            />
-          }
         />
       </div>
 
