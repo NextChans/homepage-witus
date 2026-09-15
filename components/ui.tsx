@@ -39,13 +39,24 @@ const buttonVariant = {
 
 type Variant = keyof typeof buttonVariant
 
+/**
+ * 버튼 클래스 문자열.
+ *
+ * 실제 `<button>` 이 필요한 곳(클립보드 복사 등)에서 쓴다. 링크가 아닌 동작 버튼을
+ * `<a>` 로 흉내 내지 않기 위한 것이다 — 그렇게 하면 키보드·스크린리더에서 링크로
+ * 읽힌다. **스타일은 여기 한 곳에서만 만든다.**
+ */
+export function buttonClass(variant: Variant = 'secondary', className = '') {
+  return `${buttonBase} ${buttonVariant[variant]} ${className}`
+}
+
 /** 내부 라우팅용 버튼. */
 export function ButtonLink({
   variant = 'primary',
   className = '',
   ...props
 }: ComponentProps<typeof Link> & { variant?: Variant }) {
-  return <Link className={`${buttonBase} ${buttonVariant[variant]} ${className}`} {...props} />
+  return <Link className={buttonClass(variant, className)} {...props} />
 }
 
 /** tel:/mailto: 등 외부 스킴용 버튼. next/link 를 쓰지 않는다. */
@@ -54,7 +65,7 @@ export function ButtonAnchor({
   className = '',
   ...props
 }: ComponentProps<'a'> & { variant?: Variant }) {
-  return <a className={`${buttonBase} ${buttonVariant[variant]} ${className}`} {...props} />
+  return <a className={buttonClass(variant, className)} {...props} />
 }
 
 /** 텍스트 링크 + 셰브런. 강조색은 여기서만 쓴다. */
