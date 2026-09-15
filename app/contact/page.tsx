@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { ContactForm } from '@/components/contact-form'
+import { CopyEmail } from '@/components/copy-email'
 import { Hero } from '@/components/hero'
 import { Reveal } from '@/components/reveal'
 import { ButtonAnchor, Container, Section } from '@/components/ui'
@@ -95,6 +96,10 @@ export default async function ContactPage({ searchParams }: PageProps) {
                 <div className="mt-8">
                   <ContactDetails />
                 </div>
+                {/* ⚠️ `mailto:` 는 **핸들러가 없으면 아무 일도 일어나지 않는다** —
+                    에러도 안내도 없다. 전화가 미개통인 지금 그 경우 방문자에게 남는
+                    대안이 0이므로 복사 버튼을 **항상 함께** 둔다. 메일 앱이 뜨는
+                    환경에서는 여전히 `mailto:` 가 가장 빠르니 대체하지 않는다. */}
                 <div className="mt-10 flex flex-wrap gap-3">
                   {telHref ? (
                     <>
@@ -108,7 +113,11 @@ export default async function ContactPage({ searchParams }: PageProps) {
                       이메일 보내기
                     </ButtonAnchor>
                   )}
+                  <CopyEmail email={company.email} />
                 </div>
+                <p className="mt-4 text-[13px] text-ink-muted">
+                  메일 앱이 열리지 않으면 위 주소를 복사해 사용해 주세요.
+                </p>
               </Reveal>
 
               <Reveal delay={80}>

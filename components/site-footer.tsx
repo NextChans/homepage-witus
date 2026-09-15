@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { features } from '@/content/features'
-import { company, nav, site, telHref } from '@/content/site'
+import { company, mailHref, nav, site, telHref } from '@/content/site'
 import { services } from '@/content/services'
 import { BrandMark } from './brand-mark'
 import { Container } from './ui'
@@ -70,7 +70,7 @@ export function SiteFooter() {
               <div className="flex gap-3">
                 <dt className="w-14 shrink-0">이메일</dt>
                 <dd>
-                  <a href={`mailto:${company.email}`} className="hover:text-ink">
+                  <a href={mailHref} className="hover:text-ink">
                     {company.email}
                   </a>
                 </dd>
